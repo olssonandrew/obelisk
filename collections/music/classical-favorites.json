@@ -1,0 +1,113 @@
+{
+  "id": "classical-favorites",
+  "type": "music",
+  "title": "Classical favorites",
+  "summary": "Nine well-loved pieces in freely licensed recordings, from Bach to Satie.",
+  "topics": [
+    "music"
+  ],
+  "language": "zxx",
+  "curator": "Obelisk",
+  "updated": "2026-10-15",
+  "entries": [
+    {
+      "id": "bach-cello-suite-1-prelude",
+      "title": "Cello Suite No. 1: Prélude",
+      "creator": "Johann Sebastian Bach",
+      "date": "c. 1720",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Bach_-_Cello_Suite_no._1_in_G_major%2C_BWV_1007_-_I._Pr%C3%A9lude.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:Bach_-_Cello_Suite_no._1_in_G_major,_BWV_1007_-_I._Pr%C3%A9lude.ogg",
+      "rights": "Public domain",
+      "bytes": 6286846,
+      "sha256": "07a927151e6870bd5892f59aad0459a95096acac92fa282ffceb65dd39eb4908"
+    },
+    {
+      "id": "pachelbel-canon",
+      "title": "Canon in D",
+      "creator": "Johann Pachelbel",
+      "date": "c. 1680",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/62/Pachelbel%27s_Canon.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:Pachelbel%27s_Canon.ogg",
+      "rights": "CC BY-SA 3.0",
+      "bytes": 3825619,
+      "sha256": "dbde7ed591f33e3dcfc941bce6494ec74b523a955d8c7342224290801e68d195"
+    },
+    {
+      "id": "vivaldi-spring-allegro",
+      "title": "The Four Seasons, Spring: Allegro",
+      "creator": "Antonio Vivaldi",
+      "date": "1725",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Vivaldi_-_Four_Seasons_1_Spring_mvt_1_Allegro_-_John_Harrison_violin.oga",
+      "source": "https://commons.wikimedia.org/wiki/File:Vivaldi_-_Four_Seasons_1_Spring_mvt_1_Allegro_-_John_Harrison_violin.oga",
+      "rights": "CC BY-SA 4.0",
+      "bytes": 4299414,
+      "sha256": "67ada06f97697196d67ce26c06e5c61700e7b79b0321b7f04571a4eb7435d4d3"
+    },
+    {
+      "id": "mozart-eine-kleine-nachtmusik",
+      "title": "Eine kleine Nachtmusik: Allegro",
+      "creator": "Wolfgang Amadeus Mozart",
+      "date": "1787",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/2/24/Mozart_-_Eine_kleine_Nachtmusik_-_1._Allegro.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:Mozart_-_Eine_kleine_Nachtmusik_-_1._Allegro.ogg",
+      "rights": "CC BY-SA 2.0",
+      "bytes": 11470392,
+      "sha256": "db35d442500e3d3278f19e86c75bef54d0040cd2f21e6e8b325a76a22c6e109f"
+    },
+    {
+      "id": "beethoven-moonlight-sonata",
+      "title": "Moonlight Sonata: first movement",
+      "creator": "Ludwig van Beethoven",
+      "date": "1801",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Beethoven_Moonlight_1st_movement.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:Beethoven_Moonlight_1st_movement.ogg",
+      "rights": "CC BY-SA 2.0 DE",
+      "bytes": 6633329,
+      "sha256": "6c7e3bee3ca2847981340876eba50a9713ef92cb668880750f2ce8f18da9a478"
+    },
+    {
+      "id": "chopin-nocturne-op-9-no-2",
+      "title": "Nocturne in E-flat major, Op. 9 No. 2",
+      "creator": "Frédéric Chopin",
+      "date": "1832",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Frederic_Chopin_-_Nocturne_Eb_major_Opus_9%2C_number_2.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:Frederic_Chopin_-_Nocturne_Eb_major_Opus_9,_number_2.ogg",
+      "rights": "Public domain",
+      "bytes": 13541182,
+      "sha256": "5af65b96e4b0e16cdde50f810f653ffb93ad1de2f78b9545506dc5b9d205f5cd"
+    },
+    {
+      "id": "chopin-nocturne-c-sharp-minor",
+      "title": "Nocturne in C-sharp minor, Op. posth.",
+      "creator": "Frédéric Chopin",
+      "date": "1830",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/12/Chopin%2C_Nocturne_in_C-sharp_minor%2C_Op._Posth.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:Chopin,_Nocturne_in_C-sharp_minor,_Op._Posth.ogg",
+      "rights": "CC BY 3.0",
+      "bytes": 5302273,
+      "sha256": "360fddc226bf9f9028f56a0c9b79f4de77e1656e1122782110aaa39f8a3e5afc"
+    },
+    {
+      "id": "satie-gymnopedie-1",
+      "title": "Gymnopédie No. 1",
+      "creator": "Erik Satie",
+      "date": "1888",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Gymnopedie_No._1..ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:Gymnopedie_No._1..ogg",
+      "rights": "CC0",
+      "bytes": 6502597,
+      "sha256": "13e4e03797169392166b9f11d9bf9c421c022b48ad87d9b10bd441ce068502da"
+    },
+    {
+      "id": "debussy-clair-de-lune",
+      "title": "Clair de lune",
+      "creator": "Claude Debussy",
+      "date": "1905",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/be/Clair_de_lune_%28Claude_Debussy%29_Suite_bergamasque.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:Clair_de_lune_(Claude_Debussy)_Suite_bergamasque.ogg",
+      "rights": "Public domain",
+      "bytes": 15740765,
+      "sha256": "2f7a1e833f4e2408d9d1b893131863d790ba75cd5fbcf81292dc5ed6f25918fe"
+    }
+  ]
+}

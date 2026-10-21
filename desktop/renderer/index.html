@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Obelisk</title>
+    <link rel="icon" href="favicon.svg" />
+    <script src="theme.js"></script>
+    <link rel="stylesheet" href="discover.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="window-drag"></div>
+    <aside class="sidebar">
+      <button
+        id="archive-picker"
+        class="archive-picker"
+        data-view="health"
+        title="Library details"
+      >
+        <img class="archive-icon" src="favicon.svg" width="30" height="30" alt=""
+        /><span
+          ><strong id="archive-name">Demo archive</strong
+          ><small id="status-summary"></small><span id="archive-path" hidden></span></span
+        ><small id="health-count" class="badge"></small>
+      </button>
+      <nav class="primary-nav" aria-label="Main">
+        <button data-view="library" class="active">
+          <i data-icon="grid"></i><span>Library</span>
+          <small id="library-count"></small></button
+        ><button data-view="discover">
+          <i data-icon="add"></i><span>Add content</span></button
+        ><button data-view="transfers">
+          <i data-icon="download"></i><span>Transfers</span>
+          <small id="transfer-count" class="badge"></small></button
+        >
+      </nav>
+      <div class="sidebar-scroll">
+        <div class="nav-heading"><button class="section-toggle" aria-expanded="true" aria-controls="quick-views">Shortcuts<i data-icon="chevron-down"></i></button></div>
+        <nav id="quick-views" class="quick-views" aria-label="Library shortcuts">
+          <button data-quick="favorites">
+            <i data-icon="star"></i><span>Favorites</span><small></small>
+          </button>
+          <button data-quick="recent">
+            <i data-icon="clock"></i><span>Recently added</span><small></small>
+          </button>
+          <button data-quick="needs-details">
+            <i data-icon="tag"></i><span>Untagged</span><small></small>
+          </button>
+          <button data-quick="attention" hidden>
+            <i data-icon="alert"></i><span>Needs attention</span><small></small>
+          </button>
+        </nav>
+        <div class="nav-heading folders-heading" id="folders-heading">
+          <button class="section-toggle" aria-expanded="true" aria-controls="folder-tree">Folders<i data-icon="chevron-down"></i></button>
+          <button id="new-folder" class="icon-button" title="New folder" aria-label="New folder"><i data-icon="plus"></i></button>
+        </div>
+        <nav id="folder-tree" class="folder-tree" aria-label="Folders"></nav>
+        <div class="nav-heading">
+          <button class="section-toggle" aria-expanded="true" aria-controls="sidebar-tags">Tags<i data-icon="chevron-down"></i></button> <button id="manage-tags" data-view="tags">Manage</button>
+        </div>
+        <nav id="sidebar-tags" aria-label="Tags"></nav>
+      </div>
+      <div class="sidebar-bottom">
+        <div
+          id="theme-switch"
+          class="segmented"
+          role="group"
+          aria-label="Appearance"
+        >
+          <button data-theme-choice="light" title="Light" aria-label="Light">
+            <i data-icon="sun"></i></button
+          ><button data-theme-choice="dark" title="Dark" aria-label="Dark">
+            <i data-icon="moon"></i></button
+          ><button
+            data-theme-choice="system"
+            title="Match this computer"
+            aria-label="Match this computer"
+          >
+            <i data-icon="monitor"></i>
+          </button>
+        </div>
+        <button
+          id="show-folder"
+          class="icon-button"
+          title="Show archive folder"
+          aria-label="Show archive folder"
+        >
+          <i data-icon="folder"></i></button
+        ><button
+          id="show-shortcuts"
+          class="icon-button"
+          title="How Obelisk works"
+          aria-label="How Obelisk works"
+        >
+          <i data-icon="help"></i>
+        </button>
+      </div>
+    </aside>
+    <main>
+      <section id="view-library" class="view">
+        <header class="page-header">
+          <div class="heading-block">
+            <div id="folder-crumbs" hidden></div>
+            <div class="heading-line">
+              <button id="folder-glyph" class="folder-glyph" title="Change icon" aria-label="Change folder icon" hidden></button>
+              <h1 id="library-heading">Library</h1>
+              <button id="folder-actions" class="icon-button" title="Folder actions" aria-label="Folder actions" hidden><i data-icon="more-horizontal"></i></button>
+            </div>
+            <span id="library-summary" class="muted"></span>
+          </div>
+          <div class="actions">
+            <button id="new-subfolder" class="secondary" title="New folder inside this one" hidden>
+              <i data-icon="folder-plus"></i><span>New folder</span></button
+            ><button id="import-files" class="primary">
+              <i data-icon="plus"></i><span>Add content</span></button
+            ><button
+              id="preview-details"
+              class="icon-button"
+              title="Show or hide details (⌘I)"
+              aria-label="Details"
+              aria-pressed="true"
+            >
+              <i data-icon="panel"></i>
+            </button>
+          </div>
+        </header>
+        <div class="library-tools">
+          <div class="search">
+            <i data-icon="search"></i
+            ><input
+              id="search"
+              type="search"
+              placeholder="Search titles, descriptions, tags, creators, sources"
+              aria-label="Search library"
+            /><kbd>⌘K</kbd>
+          </div>
+          <button
+            id="toggle-filters"
+            class="text-button"
+            aria-expanded="false"
+            aria-controls="filter-bar"
+            title="Filter by type, favorites, tag, rating, source, or date"
+          >
+            <i data-icon="filter"></i>Filter<span class="count"></span>
+          </button>
+          <select id="sort" class="pill" aria-label="Sort files">
+            <option value="recent">Added, newest</option>
+            <option value="oldest">Added, oldest</option>
+            <option value="date">Date, newest</option>
+            <option value="date-asc">Date, oldest</option>
+            <option value="title">Name A–Z</option>
+            <option value="title-desc">Name Z–A</option>
+            <option value="size">Largest first</option>
+            <option value="size-asc">Smallest first</option>
+            <option value="rating">Highest rated</option>
+            <option value="type">File type</option>
+          </select>
+          <label class="thumbnail-size" title="Thumbnail size"
+            ><input
+              id="thumbnail-size"
+              aria-label="Thumbnail size"
+              type="range"
+              min="125"
+              max="325"
+              value="195"
+              step="10"
+          /></label>
+          <div class="segmented">
+            <button
+              id="grid-view"
+              class="active"
+              title="Grid view"
+              aria-label="Grid view"
+            >
+              <i data-icon="grid"></i></button
+            ><button id="list-view" title="List view" aria-label="List view">
+              <i data-icon="list"></i>
+            </button>
+          </div>
+        </div>
+        <div class="filter-bar" id="filter-bar">
+          <select id="type-filter" class="pill" aria-label="Filter by type">
+            <option value="">Any type</option>
+          </select>
+          <button id="favorite-filter" class="pill toggle" aria-pressed="false">
+            <i data-icon="star"></i>Favorites
+          </button>
+          <select id="tag-filter" class="pill" aria-label="Filter by tag">
+            <option value="">All tags</option>
+          </select>
+          <select id="rating-filter" class="pill" aria-label="Filter by rating">
+            <option value="">Any rating</option>
+            <option value="5">★★★★★</option>
+            <option value="4">★★★★ & up</option>
+            <option value="3">★★★ & up</option>
+            <option value="2">★★ & up</option>
+            <option value="1">★ & up</option>
+            <option value="0">Unrated</option>
+          </select>
+          <select id="source-filter" class="pill" aria-label="Filter by source">
+            <option value="">Any source</option>
+          </select>
+          <select id="added-filter" class="pill" aria-label="Filter by date added">
+            <option value="">Added any time</option>
+            <option value="1">Today</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="365">Last year</option>
+          </select>
+          <div id="filter-summary" class="filter-summary" hidden></div>
+          <button id="clear-filters" class="text-button" disabled>Clear</button>
+          <button id="select-visible" class="text-button">Select all</button>
+        </div>
+        <div id="tag-actions" class="tag-actions" hidden>
+          <strong id="selection-count"></strong
+          ><button id="edit-selected-tags" class="secondary">Edit tags</button
+          ><button id="favorite-selected" class="secondary">Favorite</button
+          ><button id="trash-selected" class="secondary danger">
+            Move to Trash</button
+          ><button id="clear-selection" class="text-button">Clear</button>
+        </div>
+        <div class="library-workspace">
+          <div id="file-area">
+            <div id="folder-trail"></div>
+            <div id="folder-list"></div>
+            <div id="files-bar" class="files-bar" hidden>
+              <span><strong>Files</strong> <small id="files-count"></small></span>
+              <label class="switch"><input id="include-subfolders" type="checkbox" role="switch" /><span>Show subfolders</span></label>
+            </div>
+            <div id="library" class="file-grid"></div>
+            <div id="library-empty" class="empty" hidden></div>
+          </div>
+        </div>
+      </section>
+      <div id="viewer" hidden aria-label="File preview">
+        <div class="viewer-top">
+          <button
+            id="close-inspector"
+            class="icon-button"
+            title="Back to library (Esc)"
+            aria-label="Close preview"
+          >
+            <i data-icon="x"></i></button
+          ><button
+            id="previous-file"
+            class="icon-button"
+            title="Previous file (←)"
+            aria-label="Previous file"
+          >
+            <i data-icon="chevron-left"></i></button
+          ><button
+            id="next-file"
+            class="icon-button"
+            title="Next file (→)"
+            aria-label="Next file"
+          >
+            <i data-icon="chevron-right"></i>
+          </button>
+          <span id="preview-title">Preview</span>
+          <span id="viewer-position"></span>
+          <button
+            id="viewer-details"
+            class="icon-button"
+            title="Show or hide details (⌘I)"
+            aria-label="Details"
+          >
+            <i data-icon="panel"></i>
+          </button>
+          <button
+            id="favorite-item"
+            class="icon-button"
+            aria-label="Add to favorites"
+            title="Favorite"
+          >
+            <i data-icon="star"></i></button
+          ><button
+            id="expand-preview"
+            class="icon-button"
+            title="Use the whole window"
+            aria-label="Expand preview"
+          >
+            <i data-icon="maximize"></i>
+          </button>
+        </div>
+        <div id="preview"></div>
+      </div>
+      <section id="view-discover" class="view" hidden>
+        <header class="page-header">
+          <div>
+            <h1>Add content</h1>
+            <span id="import-subtitle" class="muted">From this computer or the internet</span>
+          </div>
+        </header>
+        <div class="import-quick">
+          <div class="import-local">
+            <button id="import-choose" class="primary">
+              <i data-icon="plus"></i>Choose files</button
+            ><button id="import-folder" class="secondary">
+              <i data-icon="folder"></i>Choose a folder
+            </button>
+            <span class="muted">or drop files anywhere</span>
+          </div>
+          <form id="paste-link" class="discovery-search paste-link">
+            <i data-icon="link"></i
+            ><input
+              name="url"
+              type="url"
+              required
+              aria-label="Link to save"
+              placeholder="Paste a link to a file, a web page, or a video"
+            /><button type="button" id="paste-video" class="secondary">
+              It's a video</button
+            ><button type="button" id="paste-page" class="secondary">
+              It's a web page</button
+            ><button class="primary">Save file</button>
+          </form>
+        </div>
+        <div class="section-label">By type</div>
+        <div id="discover-home" class="source-tiles"></div>
+        <div id="collections-home"></div>
+        <section id="collections-view" class="collections-view" hidden></section>
+        <div id="source-content" hidden>
+          <button id="back-discover" class="text-button">
+            <i data-icon="chevron-left"></i>Add content
+          </button>
+          <div id="type-intro" class="type-intro"></div>
+          <div id="type-collections"></div>
+          <div id="type-local" class="type-local"></div>
+          <div id="type-online-label" class="section-label"></div>
+          <section id="page-video" hidden>
+<form id="video-form">
+        <label
+          >Video URL<input
+            name="url"
+            type="url"
+            required
+            placeholder="Paste a video page or direct video link"
+        /></label>
+        <label
+          >Quality<select name="quality">
+            <option value="720">720p · smaller file</option>
+            <option value="1080" selected>1080p · full HD</option>
+            <option value="2160">4K · larger file</option>
+          </select></label
+        >
+        <button type="button" id="video-setup" class="secondary">
+          Set up video downloader
+        </button>
+        <div id="video-result" role="status"></div>
+        <div class="actions">
+          <button id="video-check" class="secondary">Check video</button
+          ><button type="button" id="video-save" class="primary" disabled>
+            Download to archive
+          </button>
+        </div>
+        <p class="muted">Download only what you have permission to keep.</p>
+      </form>
+          </section>
+          <section id="page-link" hidden>
+            <form id="link-form" class="link-form">
+              <div class="discovery-search paste-link">
+                <i data-icon="link"></i
+                ><input
+                  name="url"
+                  type="url"
+                  required
+                  aria-label="File link"
+                  placeholder="https://example.org/file.pdf"
+                /><button class="primary">Download</button>
+              </div>
+            </form>
+          </section>
+          <section id="page-maps" hidden></section>
+          <section id="page-wikipedia" hidden></section>
+          <section id="page-podcasts" hidden></section>
+          <section id="page-web" hidden>
+            <div class="source-heading"><h1>Web pages</h1></div>
+            <form id="web-form">
+              <div class="discovery-search paste-link web-addresses">
+                <i data-icon="link"></i
+                ><textarea
+                  name="urls"
+                  rows="1"
+                  required
+                  spellcheck="false"
+                  aria-label="Page addresses"
+                  placeholder="Paste an address, or several on separate lines"
+                ></textarea
+                ><button class="primary" id="web-save">Save page</button>
+              </div>
+              <div class="web-choice">
+                <label
+                  ><input type="radio" name="from" value="live" checked />As
+                  it is today</label
+                ><label
+                  ><input type="radio" name="from" value="wayback" />From the
+                  Wayback Machine</label
+                >
+              </div>
+              <div id="web-wayback" class="web-wayback" hidden>
+                <label
+                  ><input type="radio" name="span" value="one" checked />One
+                  copy, closest to
+                  <input type="date" name="date" min="1996-01-01" />
+                  <span class="muted">Leave empty for the most recent.</span></label
+                >
+                <label id="web-many"
+                  ><input type="radio" name="span" value="many" />Copies over
+                  time, one per
+                  <select name="every" aria-label="How often">
+                    <option value="year">year</option>
+                    <option value="half">six months</option>
+                    <option value="quarter">three months</option>
+                    <option value="month">month</option></select
+                  >from
+                  <input
+                    type="number"
+                    name="fromYear"
+                    min="1996"
+                    max="2100"
+                    placeholder="first"
+                    aria-label="From year"
+                  />to
+                  <input
+                    type="number"
+                    name="toYear"
+                    min="1996"
+                    max="2100"
+                    placeholder="latest"
+                    aria-label="To year"
+                  /><span class="muted" id="web-many-note"></span
+                ></label>
+                <div id="web-copies" class="web-copies" hidden></div>
+              </div>
+              <p id="web-result" class="source-note" role="status"></p>
+              <ul id="web-outcomes" class="web-outcomes"></ul>
+            </form>
+            <details class="source-details">
+              <summary>How saved pages work</summary>
+              <p>
+                Each page becomes one WACZ file on the Reference shelf, under
+                Saved websites. WACZ is the open web-archive format used by
+                libraries: inside is a WARC holding every response the page
+                received, so other tools such as ReplayWeb.page can open it
+                without Obelisk.
+              </p>
+              <p>
+                The Wayback Machine option fetches the Internet Archive’s
+                original recording of a page, which is useful when the page
+                has changed or gone. Nobody can list in advance exactly which
+                days a page was recorded, so “copies over time” asks for the
+                recording nearest each point in the span and drops repeats;
+                you choose which to keep before anything is saved. Requests
+                are paced, because the Archive is a shared, donated service.
+              </p>
+              <p>
+                Pages behind a login, endless feeds and streaming video are
+                not captured. Each address is saved as one page, not a whole
+                site. What you save is for your own reference: the rights to
+                a page stay with whoever published it.
+              </p>
+            </details>
+          </section>
+          <section id="page-software" hidden>
+            <div class="source-heading"><h1>Software & AI</h1></div>
+            <p class="muted page-lede">
+              An archive is only useful if you can still open it. Keep the
+              readers and tools it depends on alongside the files. Saved
+              packages appear on the Software shelf.
+            </p>
+        <div class="software-target">
+          <label
+            >For
+            <select
+              id="software-platform"
+              aria-label="Software operating system"
+            >
+              <option value="darwin">macOS</option>
+              <option value="win32">Windows</option>
+              <option value="linux">Linux</option>
+            </select></label
+          ><select id="software-arch" aria-label="Software processor">
+            <option value="arm64">ARM64 / Apple Silicon</option>
+            <option value="x64">Intel / AMD 64-bit</option></select
+          ><span id="software-current" class="muted"></span>
+        </div>
+        <div id="software-presets" class="software-grid"></div>
+            <div class="section-label">Running an AI model offline</div>
+            <div class="ai-guide">
+          <div class="panel setup-guide">
+            <h2>Run a model</h2>
+            <ol>
+              <li>
+                <strong>Save a compatible installer</strong>
+                <p>
+                  Download the version for your computer. Add it here to keep
+                  a copy.
+                </p>
+              </li>
+              <li>
+                <strong>Install the application</strong>
+                <p>
+                  Reveal the installer and run it using your operating system.
+                </p>
+              </li>
+              <li>
+                <strong>Load your model</strong>
+                <p>
+                  For LM Studio, use a supported GGUF model. Use
+                  <code>lms import &lt;path-to-model.gguf&gt;</code> after
+                  installing LM Studio’s command-line tool.
+                </p>
+              </li>
+              <li>
+                <strong>Test before going offline</strong>
+                <p>
+                  Load the model and send a message. Runtime downloads and
+                  memory requirements vary by model.
+                </p>
+              </li>
+            </ol>
+            <p class="muted">
+              Models and installers stay as separate files in this archive.
+              Obelisk does not run models or install software.
+            </p>
+          </div>
+            </div>
+          </section>
+        </div>
+      </section>
+      <section id="view-transfers" class="view" hidden>
+        <header class="page-header">
+          <h1>Transfers</h1>
+          <span class="muted" id="transfer-destination"></span>
+        </header>
+        <div id="jobs"></div>
+      </section>
+      <section id="view-tags" class="view" hidden>
+        <header class="page-header">
+          <div>
+            <h1>Tags</h1>
+            <span id="tags-summary" class="muted"></span>
+          </div>
+        </header>
+        <p class="muted page-lede">
+          Click a tag to see its files. Renaming one to an existing tag merges
+          them. Removing a tag leaves the files alone.
+        </p>
+        <div id="tag-table" class="tag-table"></div>
+      </section>
+      <section id="view-health" class="view" hidden>
+        <header class="page-header">
+          <h1 id="archive-title">Library</h1>
+        </header>
+        <div class="archive-card">
+          <div>
+            <strong>Folder</strong>
+            <span id="archive-where" class="muted selectable"></span>
+          </div>
+          <button id="archive-reveal" class="secondary">
+            <i data-icon="folder"></i>Show in Finder</button
+          ><button id="archive-switch" class="secondary">Switch library</button>
+        </div>
+        <div id="archive-untracked" class="untracked-card" hidden></div>
+        <div id="archive-disk" class="archive-disk"></div>
+        <div id="archive-stats" class="archive-stats"></div>
+        <div id="archive-shelves" class="archive-shelves"></div>
+        <div class="section-label">Health</div>
+        <div class="health-card">
+          <div id="health-hero" class="hero"></div>
+          <button id="scan-archive" class="primary">Check files</button>
+        </div>
+        <div id="archive-report" class="panel"></div>
+        <div class="section-label">Descriptions</div>
+        <div id="archive-care" class="archive-care"></div>
+      </section>
+    </main>
+    <aside id="inspector" aria-label="Details">
+      <div id="file-details"></div>
+    </aside>
+    <div id="onboarding" role="dialog" aria-modal="true" aria-label="Set up Obelisk" hidden></div>
+    <div id="toast" role="status" hidden></div>
+    <div id="context-menu" role="menu" hidden></div>
+    <div id="drop-overlay" hidden>
+      <i data-icon="download"></i>
+      <h2>Add to this library</h2>
+      <p class="muted">Copies are made. Original files stay where they are.</p>
+    </div>
+    <dialog id="shortcuts-dialog">
+      <div class="section-heading">
+        <h2>Keyboard shortcuts</h2>
+        <button id="close-shortcuts" class="icon-button" aria-label="Close"><i data-icon="x"></i></button>
+      </div>
+      <dl class="shortcuts">
+        <dt><kbd>Space</kbd></dt><dd>Open or close the selected file</dd>
+        <dt><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd></dt><dd>Move between files</dd>
+        <dt><kbd>⇧</kbd><kbd>click</kbd></dt><dd>Select a range · ⌘-click adds one file</dd>
+        <dt><kbd>⌘A</kbd></dt><dd>Select everything shown</dd>
+        <dt><kbd>0</kbd>–<kbd>5</kbd></dt><dd>Rate the selection</dd>
+        <dt><kbd>F</kbd></dt><dd>Favorite the selection</dd>
+        <dt><kbd>T</kbd></dt><dd>Add a tag</dd>
+        <dt><kbd>⌘K</kbd></dt><dd>Search the library</dd>
+        <dt><kbd>⌘I</kbd></dt><dd>Show or hide details</dd>
+        <dt><kbd>⌘⌫</kbd></dt><dd>Move the selection to the Trash</dd>
+        <dt><kbd>Esc</kbd></dt><dd>Close the preview, then clear the selection</dd>
+      </dl>
+    </dialog>
+
+
+    <dialog id="review-dialog" aria-labelledby="review-title">
+      <form id="review-form" method="dialog">
+        <h2 id="review-title">Add files</h2>
+        <div class="review-bulk">
+          <span class="review-bulk-label">Save all to</span>
+          <div class="review-filing">
+            <select id="review-folder" aria-label="Folder for all files"></select>
+          </div>
+          <span class="review-bulk-label">Tag all files</span>
+          <div class="review-tag-all">
+            <input id="review-tags" placeholder="Tags, separated by commas" aria-label="Tags for all files" />
+            <button type="button" id="review-tag-all" class="secondary">Add</button>
+          </div>
+        </div>
+        <div id="review-list" class="review-list"></div>
+        <div class="review-actions">
+          <button type="button" id="review-cancel" class="secondary">Cancel</button
+          ><button type="submit" id="review-save" class="primary">Add</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="tags-dialog">
+      <form>
+        <div class="section-heading">
+          <h2>Edit tags</h2>
+          <button
+            id="close-tags"
+            type="button"
+            class="icon-button"
+            aria-label="Close tags"
+          >
+            <i data-icon="x"></i>
+          </button>
+        </div>
+        <label
+          >Action<select aria-label="Tag action">
+            <option value="add">Add tags</option>
+            <option value="remove">Remove tags</option>
+            <option value="replace">Replace all tags</option>
+          </select></label
+        ><label
+          >Tags<input
+            list="tag-suggestions"
+            placeholder="history, favorites, read later"
+            aria-label="Tags"
+            maxlength="2550" /></label
+        ><datalist id="tag-suggestions"></datalist>
+        <p class="muted">
+          Separate tags with commas. Tags stay with your files.
+        </p>
+        <p id="tag-error" role="alert"></p>
+        <button type="submit" class="primary">Save tags</button>
+      </form>
+    </dialog>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

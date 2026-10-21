@@ -1,0 +1,109 @@
+/* The area chooser: whatever sits inside the frame is what gets saved. */
+#frame {
+  position: absolute;
+  inset: 13% 12%;
+  z-index: 1;
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  /* Everything outside the frame is dimmed by one very large shadow. */
+  box-shadow: 0 0 0 4000px #14121866;
+  pointer-events: none;
+}
+#measure {
+  position: absolute;
+  left: 50%;
+  bottom: -30px;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+/* Handles: the edges can be dragged along their length; a short bar marks the middle. */
+.grip {
+  position: absolute;
+  pointer-events: auto;
+  touch-action: none;
+}
+.grip.edge[data-side="n"],
+.grip.edge[data-side="s"] {
+  left: 14px;
+  right: 14px;
+  height: 14px;
+  cursor: ns-resize;
+}
+.grip.edge[data-side="e"],
+.grip.edge[data-side="w"] {
+  top: 14px;
+  bottom: 14px;
+  width: 14px;
+  cursor: ew-resize;
+}
+.grip[data-side="n"] { top: -8px; }
+.grip[data-side="s"] { bottom: -8px; }
+.grip[data-side="e"] { right: -8px; }
+.grip[data-side="w"] { left: -8px; }
+.grip.edge::after,
+.grip.corner::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 3px #0003;
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+.grip.edge::after {
+  border-radius: 99px;
+  opacity: 0;
+}
+.grip.edge[data-side="n"]::after,
+.grip.edge[data-side="s"]::after {
+  width: 22px;
+  height: 4px;
+}
+.grip.edge[data-side="e"]::after,
+.grip.edge[data-side="w"]::after {
+  width: 4px;
+  height: 22px;
+}
+.grip.corner {
+  width: 22px;
+  height: 22px;
+}
+.grip.corner[data-side="nw"] { top: -11px; left: -11px; cursor: nwse-resize; }
+.grip.corner[data-side="se"] { bottom: -11px; right: -11px; cursor: nwse-resize; }
+.grip.corner[data-side="ne"] { top: -11px; right: -11px; cursor: nesw-resize; }
+.grip.corner[data-side="sw"] { bottom: -11px; left: -11px; cursor: nesw-resize; }
+.grip.corner::after {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+/* The middle bars appear when the frame is hovered, so at rest it stays a clean line. */
+#frame:has(.grip:hover) .grip.edge::after,
+#frame.resizing .grip.edge::after {
+  opacity: 1;
+}
+.grip:hover::after,
+#frame.resizing .grip:active::after {
+  transform: translate(-50%, -50%) scale(1.25);
+}
+#frame.tight #measure {
+  bottom: 10px;
+}
+#measure:empty {
+  display: none;
+}
+#notice {
+  font-size: 12px;
+}
+.maplibregl-ctrl-bottom-right {
+  display: none;
+}

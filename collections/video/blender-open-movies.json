@@ -1,0 +1,64 @@
+{
+  "id": "blender-open-movies",
+  "type": "video",
+  "title": "Blender open movies",
+  "summary": "Four short films made in the open with free software, each released for anyone to share.",
+  "topics": [
+    "art",
+    "technology"
+  ],
+  "language": "en",
+  "curator": "Obelisk",
+  "updated": "2026-10-15",
+  "parallel": 1,
+  "entries": [
+    {
+      "id": "elephants-dream",
+      "title": "Elephants Dream",
+      "creator": "Blender Foundation",
+      "date": "2006",
+      "url": "https://download.blender.org/ED/elephantsdream-720-h264-st-aac.mov",
+      "source": "https://orange.blender.org/",
+      "rights": "CC BY 2.5, Blender Foundation",
+      "description": "The first open movie: two men in a vast, strange machine.",
+      "bytes": 152496338,
+      "sha256": "6fc295e0e92835316ec95929ccfc664b05ed2434f673e6f5e684f98f7558a547"
+    },
+    {
+      "id": "big-buck-bunny",
+      "title": "Big Buck Bunny",
+      "creator": "Blender Foundation",
+      "date": "2008",
+      "url": "https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4",
+      "source": "https://peach.blender.org/",
+      "rights": "CC BY 3.0, Blender Foundation",
+      "description": "A gentle giant rabbit takes revenge on three bullying rodents.",
+      "bytes": 61878609,
+      "sha256": "46f62396c755e1ed0ab856a1521378d54196e125ef1a1643a199af087a15046b"
+    },
+    {
+      "id": "sintel",
+      "title": "Sintel",
+      "creator": "Blender Foundation",
+      "date": "2010",
+      "url": "https://download.blender.org/durian/movies/Sintel.2010.1080p.mkv",
+      "source": "https://durian.blender.org/",
+      "rights": "CC BY 3.0, Blender Foundation",
+      "description": "A lonely girl searches for the baby dragon she raised.",
+      "bytes": 1180090590,
+      "sha256": "97f1dbc66231df42ad49bd8c29aa174b8f48933058e47e7157d4ba63d93a8efa"
+    },
+    {
+      "id": "tears-of-steel",
+      "title": "Tears of Steel",
+      "creator": "Blender Foundation",
+      "date": "2012",
+      "url": "https://download.blender.org/demo/movies/ToS/tears_of_steel_720p.mov",
+      "source": "https://mango.blender.org/",
+      "rights": "CC BY 3.0, Blender Foundation",
+      "description": "Live action and visual effects: scientists try to save the world from robots in Amsterdam.",
+      "bytes": 372178639,
+      "sha256": "efa9062d9cdb7a338e40ad530dfdf234806743f29ae6a1a136b97ece4e588e8f"
+    }
+  ]
+}

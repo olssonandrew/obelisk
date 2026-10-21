@@ -1,0 +1,164 @@
+/* Map viewer and area chooser. Colours follow the app's light and dark themes. */
+:root {
+  color-scheme: light;
+  --panel: #fdfcfff2;
+  --line: #dcd8e6;
+  --hover: #e9e6f0;
+  --ink: #1f1b29;
+  --muted: #857e96;
+  --accent: #6a3fe0;
+  --accent-ink: #fff;
+  --accent-soft: #6a3fe01c;
+  --shadow: 0 6px 24px #1f1b2926;
+  font: 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --panel: #1e1b26f2;
+  --line: #2a2535;
+  --hover: #302b3d;
+  --ink: #edeaf4;
+  --muted: #8a839c;
+  --accent: #a586ff;
+  --accent-ink: #150d2b;
+  --accent-soft: #a586ff29;
+  --shadow: 0 8px 28px #00000080;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--panel);
+  overflow: hidden;
+}
+#map {
+  position: absolute;
+  inset: 0;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.panel,
+#places,
+#notice,
+#credit {
+  position: absolute;
+  z-index: 2;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+#places {
+  top: 124px;
+  right: 10px;
+  width: 220px;
+  max-height: calc(100% - 180px);
+  overflow: auto;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+#places[hidden] {
+  display: none;
+}
+#places-toggle svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: block;
+  margin: auto;
+}
+#places-toggle[aria-expanded="true"] {
+  background: var(--accent-soft);
+}
+#places button {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  text-align: left;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+}
+#places button:hover {
+  background: var(--hover);
+}
+#places button[aria-current] {
+  background: var(--accent-soft);
+}
+#places .all {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-top: 3px;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 7px 7px;
+}
+#places strong {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+#places small {
+  color: var(--muted);
+  font-size: 11px;
+}
+#notice {
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  max-width: 70%;
+}
+#notice:empty {
+  display: none;
+}
+#credit {
+  left: 8px;
+  bottom: 8px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  box-shadow: none;
+  font-size: 10px;
+  color: var(--muted);
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#credit:empty {
+  display: none;
+}
+.maplibregl-ctrl-group {
+  background: var(--panel) !important;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow) !important;
+  border-radius: 9px !important;
+  overflow: hidden;
+}
+.maplibregl-ctrl-group button + button {
+  border-top-color: var(--line) !important;
+}
+:root[data-theme="dark"] .maplibregl-ctrl-icon {
+  filter: invert(1) brightness(1.6);
+}
+.maplibregl-ctrl-scale {
+  background: var(--panel) !important;
+  color: var(--muted) !important;
+  border-color: var(--muted) !important;
+  font-size: 10px;
+}

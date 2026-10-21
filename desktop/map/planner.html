@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Choose map area</title>
+    <script src="../theme.js"></script>
+    <link rel="stylesheet" href="vendor/maplibre.css" />
+    <link rel="stylesheet" href="map.css" />
+    <link rel="stylesheet" href="planner.css" />
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="frame" aria-hidden="true">
+      <i class="grip edge" data-side="n"></i><i class="grip edge" data-side="e"></i>
+      <i class="grip edge" data-side="s"></i><i class="grip edge" data-side="w"></i>
+      <i class="grip corner" data-side="nw"></i><i class="grip corner" data-side="ne"></i>
+      <i class="grip corner" data-side="sw"></i><i class="grip corner" data-side="se"></i>
+      <span id="measure"></span>
+    </div>
+    <div id="notice" role="status"></div>
+    <div id="credit">© OpenStreetMap contributors</div>
+    <script src="vendor/maplibre.js"></script>
+    <script src="vendor/pmtiles.js"></script>
+    <script src="atlas.js"></script>
+    <script src="planner.js"></script>
+  </body>
+</html>

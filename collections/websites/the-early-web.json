@@ -1,0 +1,99 @@
+{
+  "id": "the-early-web",
+  "type": "websites",
+  "title": "The early web",
+  "summary": "Landmark home pages as they looked when the web was new, and two that still are.",
+  "topics": [
+    "technology",
+    "history"
+  ],
+  "language": "en",
+  "curator": "Obelisk",
+  "updated": "2026-10-15",
+  "entries": [
+    {
+      "id": "the-first-website",
+      "title": "The first website",
+      "url": "http://info.cern.ch/hypertext/WWW/TheProject.html",
+      "dates": [
+        "live"
+      ],
+      "note": "Tim Berners-Lee’s page about the World Wide Web project, restored by CERN."
+    },
+    {
+      "id": "space-jam",
+      "title": "Space Jam",
+      "url": "https://www.spacejam.com/1996/",
+      "dates": [
+        "live"
+      ],
+      "note": "The 1996 film’s site, left online untouched ever since."
+    },
+    {
+      "id": "yahoo",
+      "title": "Yahoo!",
+      "url": "http://www.yahoo.com/",
+      "dates": [
+        "1996-12-20",
+        "2000-06-01"
+      ],
+      "note": "When the web was small enough to list by hand."
+    },
+    {
+      "id": "google",
+      "title": "Google",
+      "url": "http://www.google.com/",
+      "dates": [
+        "1998-12-02",
+        "2005-01-01"
+      ],
+      "note": "From a beta search page to the web’s front door."
+    },
+    {
+      "id": "amazon",
+      "title": "Amazon.com",
+      "url": "http://www.amazon.com/",
+      "dates": [
+        "1999-01-25"
+      ],
+      "note": "Earth’s biggest bookstore, before it sold everything."
+    },
+    {
+      "id": "apple",
+      "title": "Apple",
+      "url": "http://www.apple.com/",
+      "dates": [
+        "1997-01-01",
+        "2001-01-01"
+      ],
+      "note": "Before and after Steve Jobs returned."
+    },
+    {
+      "id": "nasa",
+      "title": "NASA",
+      "url": "http://www.nasa.gov/",
+      "dates": [
+        "1996-12-27"
+      ],
+      "note": "The space agency’s home page in 1996."
+    },
+    {
+      "id": "ebay",
+      "title": "eBay",
+      "url": "http://www.ebay.com/",
+      "dates": [
+        "1999-01-01"
+      ],
+      "note": "The auction site in its first boom."
+    },
+    {
+      "id": "wikipedia",
+      "title": "Wikipedia",
+      "url": "http://www.wikipedia.com/",
+      "dates": [
+        "2001-04-05"
+      ],
+      "note": "The free encyclopedia in its first months."
+    }
+  ]
+}

@@ -1,0 +1,278 @@
+{
+  "id": "sherlock-holmes-read-aloud",
+  "type": "audiobooks",
+  "title": "The Adventures of Sherlock Holmes, read aloud",
+  "summary": "All twelve stories, read by LibriVox volunteers, in twenty-four parts.",
+  "topics": [
+    "literature"
+  ],
+  "language": "en",
+  "curator": "Obelisk",
+  "updated": "2026-10-15",
+  "entries": [
+    {
+      "id": "01-a-scandal-in-bohemia-part-1",
+      "title": "01. A Scandal in Bohemia, Part 1",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_01_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 13366784,
+      "sha256": "08dbdb62400d61e51ef3bc1cb6112306c5cf253821f5f295e2b0b698d35e70f2"
+    },
+    {
+      "id": "02-a-scandal-in-bohemia-part-2",
+      "title": "02. A Scandal in Bohemia, Part 2",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_02_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 18802176,
+      "sha256": "17128a91dcccbfa7672cb6975d4ace6799c84d76bd156c9aa69721fa6d7dd6bd"
+    },
+    {
+      "id": "03-the-red-headed-league-part-1",
+      "title": "03. The Red-Headed League, Part 1",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_03_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 17458176,
+      "sha256": "bdfac860bd608db5c9d326b8728b4d9584fcded95879f59a40a1eea31d9a3e54"
+    },
+    {
+      "id": "04-the-red-headed-league-part-2",
+      "title": "04. The Red-Headed League, Part 2",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_04_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 15446016,
+      "sha256": "840c9b37a19b7c1aca85d3eb6acf1495c1eaa6eb0a5705b923673a263b1e8b05"
+    },
+    {
+      "id": "05-a-case-of-identity-part-1",
+      "title": "05. A Case of Identity, Part 1",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_05_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 12763136,
+      "sha256": "5d101a551fbe4fea173ecd21bce31cd1a28b4ad1d029551b95c47b13134662c3"
+    },
+    {
+      "id": "06-a-case-of-identity-part-2",
+      "title": "06. A Case of Identity, Part 2",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_06_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 13510144,
+      "sha256": "8aa17941aaf81e2456904f4c2a564415d8de94d16a38634a2c1a2614cb9fe6d7"
+    },
+    {
+      "id": "07-the-boscombe-valley-mystery-part-1",
+      "title": "07. The Boscombe Valley Mystery, Part 1",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_07_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 19487744,
+      "sha256": "043670f35052875d0c6e21790183763d217a622777f382b8e63de893f73772c6"
+    },
+    {
+      "id": "08-the-boscombe-valley-mystery-part-2",
+      "title": "08. The Boscombe Valley Mystery, Part 2",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_08_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 15940608,
+      "sha256": "c1e2192bf52f69518bdd56f242392547e2f13b3e498bf4f2953508e50599dd39"
+    },
+    {
+      "id": "09-the-five-orange-pips-part-1",
+      "title": "09. The Five Orange Pips, Part 1",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_09_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 14917632,
+      "sha256": "5dfb170e955d173b9513af745caa3f659bd203bc747dcaebfb1a1a9a9d990626"
+    },
+    {
+      "id": "10-the-five-orange-pips-part-2",
+      "title": "10. The Five Orange Pips, Part 2",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_10_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 11796480,
+      "sha256": "623634a5977c8188556f2502354f1c05a7c89bebf12d29b21b2edc4c60ad21ec"
+    },
+    {
+      "id": "11-the-man-with-the-twisted-lip-part-1",
+      "title": "11. The Man with the Twisted Lip, Part 1",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_11_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 19051520,
+      "sha256": "36b05cafe54546edc6fbea7a53ca122ad8a8aac4b9548bb996caddb172a153e2"
+    },
+    {
+      "id": "12-the-man-with-the-twisted-lip-part-2",
+      "title": "12. The Man with the Twisted Lip, Part 2",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_12_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 15824896,
+      "sha256": "25bf8c306f2fd78b1c0490eb786813f6e24e1d900542131fdd5b4dbefa2c7ddb"
+    },
+    {
+      "id": "13-the-adventure-of-the-blue-carbuncle-part-1",
+      "title": "13. The Adventure of the Blue Carbuncle, Part 1",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_13_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 14104576,
+      "sha256": "b534ee34c2910b6edc344e0873c9d56994afe5d5fbaa1ee633a1f328365662e5"
+    },
+    {
+      "id": "14-the-adventure-of-the-blue-carbuncle-part-2",
+      "title": "14. The Adventure of the Blue Carbuncle, Part 2",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_14_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 16564736,
+      "sha256": "e03dbee3a4d7d600d5e4834f5b3ba1cbdd3631364a35b5ae8632d1157f2199f9"
+    },
+    {
+      "id": "15-the-adventure-of-the-speckled-band-part-1",
+      "title": "15. The Adventure of the Speckled Band, Part 1",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_15_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 17306624,
+      "sha256": "a2bee5ccde222fcabafb1c20e2550d04034040658a1d52f8e5b7d812ac3c884f"
+    },
+    {
+      "id": "16-the-adventure-of-the-speckled-band-part-2",
+      "title": "16. The Adventure of the Speckled Band, Part 2",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_16_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 19217920,
+      "sha256": "1b0c383a7640cbd721018253a74b28f0628696bc7a30c12c851aec7da6419de4"
+    },
+    {
+      "id": "17-the-adventure-of-the-engineer-s-thumb-part-1",
+      "title": "17. The Adventure of the Engineer's Thumb, Part 1",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_17_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 15037952,
+      "sha256": "5a6ac88aab7236f596b3265eb99622a92035ef5aeaf2e3245f501d6ffafab600"
+    },
+    {
+      "id": "18-the-adventure-of-the-engineer-s-thumb-part-2",
+      "title": "18. The Adventure of the Engineer's Thumb, Part 2",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_18_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 14118912,
+      "sha256": "783e8b5e3128493f7766d627d09b7a571a6e8543eff98e03afcdaa6080a013e0"
+    },
+    {
+      "id": "19-the-adventure-of-the-noble-bachelor-part-1",
+      "title": "19. The Adventure of the Noble Bachelor, Part 1",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_19_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 16932352,
+      "sha256": "c0dc1c66f143199b7eefc3cbad446d681680a5262faa8546aac30a49612ca786"
+    },
+    {
+      "id": "20-the-adventure-of-the-noble-bachelor-part-2",
+      "title": "20. The Adventure of the Noble Bachelor, Part 2",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_20_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 14828032,
+      "sha256": "b5c8664662657e67cdde430381dffa986a6d1e6707d0781c90f4385746b17ee3"
+    },
+    {
+      "id": "21-the-adventure-of-the-beryl-coronet-part-1",
+      "title": "21. The Adventure of the Beryl Coronet, Part 1",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_21_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 16781824,
+      "sha256": "387b160d6f8158778c21338f0ebc83c30f150e9d98fb0e0e0320dbe3b4928c7c"
+    },
+    {
+      "id": "22-the-adventure-of-the-beryl-coronet-part-2",
+      "title": "22. The Adventure of the Beryl Coronet, Part 2",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_22_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 19214848,
+      "sha256": "961656d8a3180fdb20e9aaf9c0b3690093bc8d8c3bd9d4bfa82b59288294e56d"
+    },
+    {
+      "id": "23-the-adventure-of-the-copper-beeches-part-1",
+      "title": "23. The Adventure of the Copper Beeches, Part 1",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_23_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 15398912,
+      "sha256": "d527d885fbb5e63f0e6ca2084d3462d254802ec46e9dc86671637a75c5bbcc93"
+    },
+    {
+      "id": "24-the-adventure-of-the-copper-beeches-part-2",
+      "title": "24. The Adventure of the Copper Beeches, Part 2",
+      "creator": "Arthur Conan Doyle, read by LibriVox volunteers",
+      "date": "1892",
+      "url": "https://archive.org/download/adventures_sherlock_holmes_rg_librivox/adventuresholmes_24_doyle_64kb.mp3",
+      "source": "https://archive.org/details/adventures_sherlock_holmes_rg_librivox",
+      "rights": "Public domain (LibriVox recording)",
+      "bytes": 20791296,
+      "sha256": "17ac1537844da0d4245ea32e0d655fb4e206bd34ec4f65058643c49e73abc485"
+    }
+  ]
+}

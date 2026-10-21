@@ -1,0 +1,48 @@
+{
+  "name": "obelisk",
+  "version": "0.5.1",
+  "private": true,
+  "description": "A personal offline library, stored in ordinary files you control.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "demo": "node scripts/seed.js",
+    "demo:library": "node scripts/demo-library.js",
+    "screenshots": "node scripts/screenshots.js",
+    "check": "node scripts/check.js",
+    "test": "node --test tests/*.test.js",
+    "setup:maps": "node scripts/setup-maps.js",
+    "build": "node scripts/build-viewer.js",
+    "prepare": "npm run build",
+    "package": "node scripts/package.js",
+    "test:desktop": "node scripts/smoke.js",
+    "bench": "node scripts/bench.js",
+    "collections": "node scripts/collections.js"
+  },
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "@protomaps/basemaps": "5.7.2",
+    "dompurify": "3.4.17",
+    "fast-xml-parser": "5.11.2",
+    "jszip": "3.10.2",
+    "maplibre-gl": "6.13.0",
+    "marked": "18.1.1",
+    "pdfjs-dist": "6.4.299",
+    "pmtiles": "4.5.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.7.0",
+    "esbuild": "0.28.2",
+    "playwright-core": "1.64.0"
+  },
+  "main": "desktop/main.js",
+  "productName": "Obelisk",
+  "obelisk": {
+    "collections": ""
+  }
+}

@@ -1,0 +1,15 @@
+YOUR WORLD, WITHIN REACH
+
+This is a small, original sample for Obelisk's demo library.
+
+Obelisk keeps files in ordinary folders. Each item has an item.json manifest
+containing its title, original source, local path, acquisition date, and SHA-256.
+The database and the HTML library can be regenerated from those manifests.
+
+Try importing a document, then open START_HERE.html directly from the archive.
+Copy the whole archive folder to preserve relative links.
+
+A recorded checksum is a baseline for later integrity checks. It does not prove
+that a file is authentic, safe to run, or readable on every operating system.
+
+This original demo text is dedicated to the public domain under CC0-1.0.

@@ -1,0 +1,147 @@
+{
+  "id": "a-first-shelf-of-classics",
+  "type": "books",
+  "title": "A first shelf of classics",
+  "summary": "Twelve novels everyone should own, in Standard Ebooks’ carefully typeset editions.",
+  "topics": [
+    "literature"
+  ],
+  "language": "en",
+  "curator": "Obelisk",
+  "updated": "2026-10-15",
+  "parallel": 2,
+  "entries": [
+    {
+      "id": "pride-and-prejudice",
+      "title": "Pride and Prejudice",
+      "creator": "Jane Austen",
+      "date": "1813",
+      "url": "https://standardebooks.org/ebooks/jane-austen/pride-and-prejudice/downloads/jane-austen_pride-and-prejudice.epub?source=download",
+      "source": "https://standardebooks.org/ebooks/jane-austen/pride-and-prejudice",
+      "rights": "Public domain; Standard Ebooks edition dedicated to the public domain (CC0)",
+      "bytes": 831959,
+      "sha256": "85814417c1a74d2ca7f3b077b47454d0cfc728392d40d846d1c97d44f24c5279"
+    },
+    {
+      "id": "jane-eyre",
+      "title": "Jane Eyre",
+      "creator": "Charlotte Brontë",
+      "date": "1847",
+      "url": "https://standardebooks.org/ebooks/charlotte-bronte/jane-eyre/downloads/charlotte-bronte_jane-eyre.epub?source=download",
+      "source": "https://standardebooks.org/ebooks/charlotte-bronte/jane-eyre",
+      "rights": "Public domain; Standard Ebooks edition dedicated to the public domain (CC0)",
+      "bytes": 933471,
+      "sha256": "278f21286176a26993ad5b545480650a71c4b32d2aee56ff671d226b8363f8f4"
+    },
+    {
+      "id": "wuthering-heights",
+      "title": "Wuthering Heights",
+      "creator": "Emily Brontë",
+      "date": "1847",
+      "url": "https://standardebooks.org/ebooks/emily-bronte/wuthering-heights/downloads/emily-bronte_wuthering-heights.epub?source=download",
+      "source": "https://standardebooks.org/ebooks/emily-bronte/wuthering-heights",
+      "rights": "Public domain; Standard Ebooks edition dedicated to the public domain (CC0)",
+      "bytes": 820496,
+      "sha256": "708797eb1a8bb63aeb91dd3dfbef52cfe2b7aae521ccc5943692c2a40d6c71be"
+    },
+    {
+      "id": "frankenstein",
+      "title": "Frankenstein",
+      "creator": "Mary Shelley",
+      "date": "1818",
+      "url": "https://standardebooks.org/ebooks/mary-shelley/frankenstein/downloads/mary-shelley_frankenstein.epub?source=download",
+      "source": "https://standardebooks.org/ebooks/mary-shelley/frankenstein",
+      "rights": "Public domain; Standard Ebooks edition dedicated to the public domain (CC0)",
+      "bytes": 685797,
+      "sha256": "0b5c070e2cde4d8bb36ef707f9d024465b00d0c49c078f0a148270f55b8c8780"
+    },
+    {
+      "id": "moby-dick",
+      "title": "Moby-Dick",
+      "creator": "Herman Melville",
+      "date": "1851",
+      "url": "https://standardebooks.org/ebooks/herman-melville/moby-dick/downloads/herman-melville_moby-dick.epub?source=download",
+      "source": "https://standardebooks.org/ebooks/herman-melville/moby-dick",
+      "rights": "Public domain; Standard Ebooks edition dedicated to the public domain (CC0)",
+      "bytes": 1165523,
+      "sha256": "5d9c3ddb9d4cda136605ebfd1415f22fa30fd312872346bd8dda6be4c4c47d82"
+    },
+    {
+      "id": "great-expectations",
+      "title": "Great Expectations",
+      "creator": "Charles Dickens",
+      "date": "1861",
+      "url": "https://standardebooks.org/ebooks/charles-dickens/great-expectations/downloads/charles-dickens_great-expectations.epub?source=download",
+      "source": "https://standardebooks.org/ebooks/charles-dickens/great-expectations",
+      "rights": "Public domain; Standard Ebooks edition dedicated to the public domain (CC0)",
+      "bytes": 1002522,
+      "sha256": "a57c951c024cb11b383c0fcfe796119b6884785f15fa7b011074c8cc45fbd607"
+    },
+    {
+      "id": "alices-adventures-in-wonderland",
+      "title": "Alice’s Adventures in Wonderland",
+      "creator": "Lewis Carroll",
+      "date": "1865",
+      "url": "https://standardebooks.org/ebooks/lewis-carroll/alices-adventures-in-wonderland/john-tenniel/downloads/lewis-carroll_alices-adventures-in-wonderland_john-tenniel.epub?source=download",
+      "source": "https://standardebooks.org/ebooks/lewis-carroll/alices-adventures-in-wonderland/john-tenniel",
+      "rights": "Public domain; Standard Ebooks edition dedicated to the public domain (CC0)",
+      "bytes": 18398848,
+      "sha256": "8f957fd0c7fabc290f8a423ea2f9a2d2215291514f5f9959d23cbb91f4bc0c7f"
+    },
+    {
+      "id": "crime-and-punishment",
+      "title": "Crime and Punishment",
+      "creator": "Fyodor Dostoevsky, translated by Constance Garnett",
+      "date": "1866",
+      "url": "https://standardebooks.org/ebooks/fyodor-dostoevsky/crime-and-punishment/constance-garnett/downloads/fyodor-dostoevsky_crime-and-punishment_constance-garnett.epub?source=download",
+      "source": "https://standardebooks.org/ebooks/fyodor-dostoevsky/crime-and-punishment/constance-garnett",
+      "rights": "Public domain; Standard Ebooks edition dedicated to the public domain (CC0)",
+      "bytes": 1217858,
+      "sha256": "99854bf732c46a4d2bf657bf80dc3f48a42ed34b2d622edc5411a0221ea3828f"
+    },
+    {
+      "id": "middlemarch",
+      "title": "Middlemarch",
+      "creator": "George Eliot",
+      "date": "1871",
+      "url": "https://standardebooks.org/ebooks/george-eliot/middlemarch/downloads/george-eliot_middlemarch.epub?source=download",
+      "source": "https://standardebooks.org/ebooks/george-eliot/middlemarch",
+      "rights": "Public domain; Standard Ebooks edition dedicated to the public domain (CC0)",
+      "bytes": 1328604,
+      "sha256": "cc2f7d8113f526335de81455b5bea9d3750a935f4b751cbdc6a191b3138ffcc8"
+    },
+    {
+      "id": "anna-karenina",
+      "title": "Anna Karenina",
+      "creator": "Leo Tolstoy, translated by Constance Garnett",
+      "date": "1878",
+      "url": "https://standardebooks.org/ebooks/leo-tolstoy/anna-karenina/constance-garnett/downloads/leo-tolstoy_anna-karenina_constance-garnett.epub?source=download",
+      "source": "https://standardebooks.org/ebooks/leo-tolstoy/anna-karenina/constance-garnett",
+      "rights": "Public domain; Standard Ebooks edition dedicated to the public domain (CC0)",
+      "bytes": 1367385,
+      "sha256": "34e05a87aa84d6687a47539ead0c3620d65f99222f011212e8fb776aa83b87a8"
+    },
+    {
+      "id": "the-adventures-of-sherlock-holmes",
+      "title": "The Adventures of Sherlock Holmes",
+      "creator": "Arthur Conan Doyle",
+      "date": "1892",
+      "url": "https://standardebooks.org/ebooks/arthur-conan-doyle/the-adventures-of-sherlock-holmes/downloads/arthur-conan-doyle_the-adventures-of-sherlock-holmes.epub?source=download",
+      "source": "https://standardebooks.org/ebooks/arthur-conan-doyle/the-adventures-of-sherlock-holmes",
+      "rights": "Public domain; Standard Ebooks edition dedicated to the public domain (CC0)",
+      "bytes": 742083,
+      "sha256": "644ab66744e64b03915d0d1ee6167c1de1b7a17f0544c81fc31ad4ad3585d59c"
+    },
+    {
+      "id": "the-great-gatsby",
+      "title": "The Great Gatsby",
+      "creator": "F. Scott Fitzgerald",
+      "date": "1925",
+      "url": "https://standardebooks.org/ebooks/f-scott-fitzgerald/the-great-gatsby/downloads/f-scott-fitzgerald_the-great-gatsby.epub?source=download",
+      "source": "https://standardebooks.org/ebooks/f-scott-fitzgerald/the-great-gatsby",
+      "rights": "Public domain; Standard Ebooks edition dedicated to the public domain (CC0)",
+      "bytes": 442470,
+      "sha256": "abc9787fbce767ea980448a104f4321821475dc41a365d49715c71573d822825"
+    }
+  ]
+}

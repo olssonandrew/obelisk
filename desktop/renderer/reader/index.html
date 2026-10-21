@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Document reader</title>
+    <link rel="stylesheet" href="reader.css" />
+  </head>
+  <body>
+    <nav aria-label="Reading controls">
+      <button id="previous" aria-label="Previous page or chapter">←</button
+      ><select id="chapters" aria-label="Chapter"></select
+      ><span id="position"></span
+      ><button id="next" aria-label="Next page or chapter">→</button
+      ><button id="smaller" aria-label="Smaller text">A−</button
+      ><button id="larger" aria-label="Larger text">A+</button>
+    </nav>
+    <p id="status" role="status">Opening document…</p>
+    <main id="content"></main>
+    <script type="module" src="vendor/reader.js"></script>
+  </body>
+</html>

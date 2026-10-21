@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Obelisk — close crop</title>
+  <desc id="desc">A monumental white and gray obelisk on purple, with an enlarged pyramidal tip and a shaft extending beyond the bottom of the rounded icon.</desc>
+  <defs><clipPath id="frame"><rect width="512" height="512" rx="112"/></clipPath></defs>
+  <g clip-path="url(#frame)">
+    <rect width="512" height="512" fill="#69518F"/>
+    <path d="M256 42 163 180 127 650H256Z" fill="#F2F0F5"/>
+    <path d="M256 42 349 180 385 650H256Z" fill="#C5BECE"/>
+    <path d="m256 42-93 138 93 34Z" fill="#FFFFFF"/>
+    <path d="m256 42 93 138-93 34Z" fill="#E0DBE7"/>
+  </g>
+</svg>

@@ -1,0 +1,3 @@
+Map icon sprites from https://github.com/protomaps/basemaps-assets (sprites/v4),
+derived from MIT-licensed tangrams/icons: https://github.com/tangrams/icons/blob/master/LICENSE.md
+Retrieved 2026-10-13.

@@ -1,0 +1,80 @@
+# Roadmap
+
+What's built, what's next, and what's only an idea. Statuses are kept current with the
+code.
+
+**Status:** ✅ done · 🔨 in progress · 📋 planned · 💡 idea
+
+# Features
+
+## Library
+
+| Feature | Status | Notes |
+|---|---|---|
+| Plain-file library: each file in its own folder with an `item.json` | ✅ | [library-format.md](library-format.md) |
+| Catalog rebuilt from the files at any time | ✅ | |
+| Folders: tree, drag and drop, reorder, move up, delete (keep or Trash) | ✅ | [folders.md](folders.md) |
+| Tags, ratings, dates, notes, search | ✅ | |
+| Integrity check: missing, moved, changed and untracked files | ✅ | |
+| Crash-safe moves (journal, undo on failure, retry on next open) | ✅ | |
+| Warning when a library is in iCloud, Dropbox, OneDrive and similar | ✅ | |
+
+## Importing
+
+| Feature | Status | Notes |
+|---|---|---|
+| Files and folders from this computer, with review before import | ✅ | |
+| Web pages, live or from the Wayback Machine (WACZ) | ✅ | |
+| Wikipedia and other Kiwix editions, read in the app | ✅ | [architecture.md](architecture.md#readers) |
+| Wikipedia page: just the full encyclopedia, with and without images | 📋 | Topic editions stay listed from Kiwix; not contributable. |
+| Offline maps of any area, with a resizable frame | ✅ | |
+| Podcasts: search, follow, save episodes | ✅ | |
+| Video from a link | ✅ | [architecture.md](architecture.md#readers) |
+| Software and AI models | ✅ | |
+| Downloads: resume, retries, rate limits, polite per-server limits | ✅ | [collections.md](collections.md#when-servers-push-back) |
+
+## Collections
+
+| Feature | Status | Notes |
+|---|---|---|
+| Collections v1: podcasts, websites, books, documents, images, music, audiobooks, video | ✅ | [collections.md](collections.md) |
+| Contributor guide, `npm run collections` check and fill, weekly link check | ✅ | [collections/README.md](../collections/README.md) |
+| Live list from the repository | 🔨 | Set `obelisk.collections` in `package.json` once the repo is public. |
+| More starter collections, and a robustness pass | 🔨 | |
+| Software list as collections, one entry per platform | 💡 | |
+
+## Server mode
+
+| Feature | Status | Notes |
+|---|---|---|
+| Share the library on the local network: anyone on the same Wi-Fi opens it in a browser | 📋 | Runs on the Mac that holds the drive. Off by default. |
+| Settings: on or off, read-only or not, a password, which folders are shared, port | 📋 | |
+| Browser reader for each kind of file: pages, books, maps, Wikipedia, media | 📋 | Reuses the app's readers where it can. |
+
+## Builds and CI
+
+| Feature | Status | Notes |
+|---|---|---|
+| Tests on Mac, Windows and Linux for every push | ✅ | Configured; has never run, as there's no remote yet. |
+| Release builds for Mac, Windows and Linux from CI, on a version tag | 📋 | Each build is launched on its runner before upload; unsigned at first. File names must match the README's download table, and builds need `npm run setup:maps` first so maps work. |
+| Mac signing and notarization | 💡 | Needs an Apple Developer account. |
+
+## First public release
+
+| Item | Status | Notes |
+|---|---|---|
+| Public GitHub repository and first commit | 📋 | |
+| User agent with the project's address (Wikimedia asks for a contact) | 📋 | Needs the repo URL. |
+| README screenshots retaken, including collections | ✅ | |
+| README download button | ✅ | Links to the latest release. A star count is ready in a comment for when the repo is public. |
+| Fresh-clone check: `npm ci`, tests, launch | 📋 | |
+| First CI run, and fixes from it | 📋 | Expect some on Windows. |
+| GPL source for the bundled Wikipedia reader, published with builds | 📋 | Required before distributing binaries; see [third-party.md](third-party.md). |
+
+# Fixes
+
+| Fix | Status | Notes |
+|---|---|---|
+| Better EPUB and PDF reading | 📋 | Both feel basic now: layout, page turning, table of contents, search, remembering your place. |
+| Large libraries | 📋 | Startup, search and scrolling are benchmarked at 50,000 files (`npm run bench`); moves and checks at that size aren't yet, and some moves scan the whole catalog. |
+| Windows and Linux rough edges | 💡 | Expected once people use them; tested only in CI so far. |

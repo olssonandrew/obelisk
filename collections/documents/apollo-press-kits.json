@@ -1,0 +1,148 @@
+{
+  "id": "apollo-press-kits",
+  "type": "documents",
+  "title": "Apollo press kits",
+  "summary": "NASA’s own briefing for every crewed Apollo mission: plans, crews, spacecraft and timelines.",
+  "topics": [
+    "history",
+    "science"
+  ],
+  "language": "en",
+  "curator": "Obelisk",
+  "updated": "2026-10-15",
+  "parallel": 2,
+  "entries": [
+    {
+      "id": "apollo-7",
+      "title": "Apollo 7 press kit",
+      "creator": "NASA",
+      "date": "1968-10-06",
+      "url": "https://archive.org/download/apollo-7-press-kit/apollo-7-press-kit.pdf",
+      "source": "https://archive.org/details/apollo-7-press-kit",
+      "rights": "Public domain (NASA)",
+      "description": "The first crewed Apollo flight, in Earth orbit.",
+      "bytes": 3845520,
+      "sha256": "d0c04d96025b33d8630b3308da3862b9772de712e7ee2b96a7c17532a513f3d6"
+    },
+    {
+      "id": "apollo-8",
+      "title": "Apollo 8 press kit",
+      "creator": "NASA",
+      "date": "1968-12-15",
+      "url": "https://archive.org/download/apollo-8-press-kit/apollo-8-press-kit.pdf",
+      "source": "https://archive.org/details/apollo-8-press-kit",
+      "rights": "Public domain (NASA)",
+      "description": "The first people to orbit the Moon.",
+      "bytes": 6162826,
+      "sha256": "fb5ba158821c989460f1a84c8efa85d459988529409585d78967f758b4462947"
+    },
+    {
+      "id": "apollo-9",
+      "title": "Apollo 9 press kit",
+      "creator": "NASA",
+      "date": "1969-02-23",
+      "url": "https://archive.org/download/apollo-9-press-kit/apollo-9-press-kit.pdf",
+      "source": "https://archive.org/details/apollo-9-press-kit",
+      "rights": "Public domain (NASA)",
+      "description": "The lunar module’s first crewed test, in Earth orbit.",
+      "bytes": 5479584,
+      "sha256": "dae5aed60fa3a2a44a1cf6965d62304fc4cc3b888148de9db116923dfb3fb432"
+    },
+    {
+      "id": "apollo-10",
+      "title": "Apollo 10 press kit",
+      "creator": "NASA",
+      "date": "1969-05-07",
+      "url": "https://archive.org/download/apollo-10-press-kit/apollo-10-press-kit.pdf",
+      "source": "https://archive.org/details/apollo-10-press-kit",
+      "rights": "Public domain (NASA)",
+      "description": "The dress rehearsal, down to nine miles above the Moon.",
+      "bytes": 7086312,
+      "sha256": "984c2d88b444114c5e872f13d6d3786dfe4a3be1863bc50c2183a4778efcd28c"
+    },
+    {
+      "id": "apollo-11",
+      "title": "Apollo 11 press kit",
+      "creator": "NASA",
+      "date": "1969-07-06",
+      "url": "https://archive.org/download/apollo-11-press-kit/apollo-11-press-kit.pdf",
+      "source": "https://archive.org/details/apollo-11-press-kit",
+      "rights": "Public domain (NASA)",
+      "description": "The first Moon landing.",
+      "bytes": 8858407,
+      "sha256": "fcb1ae7a88e5251559dde0b7d51ec71f06795cf78f64491aa9594fdf9ca89334"
+    },
+    {
+      "id": "apollo-12",
+      "title": "Apollo 12 press kit",
+      "creator": "NASA",
+      "date": "1969-11-05",
+      "url": "https://archive.org/download/apollo-12-press-kit/apollo-12-press-kit.pdf",
+      "source": "https://archive.org/details/apollo-12-press-kit",
+      "rights": "Public domain (NASA)",
+      "description": "A pinpoint landing beside Surveyor 3.",
+      "bytes": 7669844,
+      "sha256": "8ebe74f27507cb9a71a151dc37037350c6523274b7099d3b62b64318301a0c42"
+    },
+    {
+      "id": "apollo-13",
+      "title": "Apollo 13 press kit",
+      "creator": "NASA",
+      "date": "1970-04-02",
+      "url": "https://archive.org/download/apollo-13-press-kit/apollo-13-press-kit.pdf",
+      "source": "https://archive.org/details/apollo-13-press-kit",
+      "rights": "Public domain (NASA)",
+      "description": "The planned third landing, before the explosion.",
+      "bytes": 6257492,
+      "sha256": "a508d3ace9e64486c1d26bcf4c2fb5593c90c35afec05357896f9abdb5845005"
+    },
+    {
+      "id": "apollo-14",
+      "title": "Apollo 14 press kit",
+      "creator": "NASA",
+      "date": "1971-01-21",
+      "url": "https://archive.org/download/apollo-14-press-kit/apollo-14-press-kit.pdf",
+      "source": "https://archive.org/details/apollo-14-press-kit",
+      "rights": "Public domain (NASA)",
+      "description": "Alan Shepard returns to space, at Fra Mauro.",
+      "bytes": 4098542,
+      "sha256": "5fc1c3ac7b1136f362ec9754a1a00d982abea86350a3ee25e17f3d542a7e6891"
+    },
+    {
+      "id": "apollo-15",
+      "title": "Apollo 15 press kit",
+      "creator": "NASA",
+      "date": "1971-07-15",
+      "url": "https://archive.org/download/apollo-15-press-kit/apollo-15-press-kit.pdf",
+      "source": "https://archive.org/details/apollo-15-press-kit",
+      "rights": "Public domain (NASA)",
+      "description": "The first lunar rover, at Hadley Rille.",
+      "bytes": 5164356,
+      "sha256": "5233c0f30bcd5a1403c3fee5ffe0206cd24aaee58fc04e45126e3ab223efeb96"
+    },
+    {
+      "id": "apollo-16",
+      "title": "Apollo 16 press kit",
+      "creator": "NASA",
+      "date": "1972-04-06",
+      "url": "https://archive.org/download/apollo-16-press-kit/apollo-16-press-kit.pdf",
+      "source": "https://archive.org/details/apollo-16-press-kit",
+      "rights": "Public domain (NASA)",
+      "description": "The lunar highlands at Descartes.",
+      "bytes": 5592258,
+      "sha256": "e0fc70dec94a502942450c49ee3e02f976e75fd22ee180ee39b0106918a53144"
+    },
+    {
+      "id": "apollo-17",
+      "title": "Apollo 17 press kit",
+      "creator": "NASA",
+      "date": "1972-11-26",
+      "url": "https://archive.org/download/apollo-17-press-kit/apollo-17-press-kit.pdf",
+      "source": "https://archive.org/details/apollo-17-press-kit",
+      "rights": "Public domain (NASA)",
+      "description": "The last crewed Moon landing.",
+      "bytes": 5842524,
+      "sha256": "e1a14a4df1a7cc0834d94d7ca53e0c936f6af7436f0f50d17c100c828c2fa643"
+    }
+  ]
+}

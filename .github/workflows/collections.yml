@@ -1,0 +1,37 @@
+name: Collections
+# Once a week, every address in every collection is asked for once: a few bytes of each
+# file, each feed, each Wayback copy, three seconds apart per server. Anything broken
+# opens an issue so a maintainer can fix or remove the entry.
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - id: check
+        # bash with pipefail, so the check's failure isn't hidden by tee.
+        shell: bash
+        run: npm run collections -- --online 2>&1 | tee report.txt
+        continue-on-error: true
+      - if: steps.check.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "The weekly check found collection entries that no longer work."
+            echo
+            echo '```'
+            grep -v '^✓' report.txt
+            echo '```'
+          } > body.md
+          gh issue create --title "Collections: broken entries ($(date +%Y-%m-%d))" --body-file body.md

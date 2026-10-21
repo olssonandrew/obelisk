@@ -1,0 +1,14 @@
+{
+  "project": "OpenZIM javascript-libzim",
+  "version": "v0.95",
+  "license": "GPL-3.0-or-later",
+  "source": "https://github.com/openzim/javascript-libzim/tree/v0.95",
+  "sourceArchive": "https://github.com/openzim/javascript-libzim/archive/refs/tags/v0.95.tar.gz",
+  "release": "https://github.com/openzim/javascript-libzim/releases/download/v0.95/libzim_wasm_0.95.zip",
+  "releaseSha256": "896e4eab4986670ae9c0858312fa5225436e3498990c45df752e0be46eb4fe3d",
+  "files": {
+    "libzim-wasm.cjs": "132bf25528a97dbeae4b33b925062c45aff3d9eb0f8ff3b3a9f3dc85a5f4ceb8",
+    "libzim-wasm.wasm": "2c30977782b682b84a73445cb8d5b27996ee2b401f508c75b4d6b950956ccbd8"
+  },
+  "changes": "libzim-wasm.js renamed to libzim-wasm.cjs; bytes unmodified."
+}

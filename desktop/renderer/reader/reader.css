@@ -1,0 +1,108 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #faf9f6;
+  color: #242424;
+  font:
+    16px/1.7 Georgia,
+    serif;
+}
+nav {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px;
+  background: #f4f3f0;
+  border-bottom: 1px solid #e0dfdc;
+  font: 12px system-ui;
+  z-index: 2;
+}
+button,
+select {
+  font: inherit;
+  background: transparent;
+  border: 1px solid #d7d6d2;
+  border-radius: 6px;
+  padding: 5px 8px;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+select {
+  min-width: 0;
+  max-width: 40%;
+  flex: 1;
+}
+#position {
+  margin-right: auto;
+  white-space: nowrap;
+}
+#status {
+  padding: 12px 22px;
+  font: 13px/1.5 system-ui;
+}
+#content {
+  padding: 28px clamp(18px, 6vw, 70px);
+  max-width: 900px;
+  margin: auto;
+  overflow-wrap: anywhere;
+}
+#content h1,
+#content h2,
+#content h3 {
+  line-height: 1.25;
+  font-family: system-ui;
+  letter-spacing: -0.025em;
+}
+#content h1 {
+  font-size: 1.85em;
+}
+#content img {
+  max-width: 100%;
+  height: auto;
+}
+#content pre {
+  white-space: pre-wrap;
+  font:
+    0.85em/1.6 ui-monospace,
+    monospace;
+}
+#content a {
+  color: inherit;
+  text-decoration: underline;
+}
+#content table {
+  max-width: 100%;
+  border-collapse: collapse;
+}
+td,
+th {
+  padding: 5px;
+  border: 1px solid #ccc;
+}
+canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: auto;
+  box-shadow: 0 2px 18px #0001;
+}
+body.pdf #content {
+  padding: 16px;
+  max-width: none;
+}
+body.pdf {
+  background: #e9e8e5;
+}
+[hidden] {
+  display: none !important;
+}

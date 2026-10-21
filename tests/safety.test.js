@@ -1,0 +1,193 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, rename, chmod, access } from "node:fs/promises";
+import { writeFileSync } from "node:fs";
+import path from "node:path";
+import os from "node:os";
+import { openLibrary } from "../packages/core/library.js";
+
+const exists = (file) => access(file).then(() => true, () => false);
+const named = (library, name) => library.state().folders.find((f) => f.name === name);
+const trashIn = (bin) => async (target) => {
+  await mkdir(bin, { recursive: true });
+  await rename(target, path.join(bin, `${path.basename(target)}-${Math.random()}`));
+};
+async function withLibrary(run) {
+  const root = await mkdtemp(path.join(os.tmpdir(), "obelisk-safety-"));
+  const library = await openLibrary(path.join(root, "lib"));
+  try {
+    await run(library, root);
+  } finally {
+    await library.close();
+    await rm(root, { recursive: true, force: true });
+  }
+}
+async function add(library, root, name, text = name, folderId) {
+  const file = path.join(root, name);
+  await writeFile(file, text);
+  const [result] = await library.importEntries((await library.previewPaths([file])).map((f) => ({ ...f, folderId })));
+  return result.item;
+}
+
+test("a file inside the library that changes while it is imported is kept", async () => {
+  await withLibrary(async (library) => {
+    const loose = path.join(library.archiveRoot, "Documents", "draft.txt");
+    await writeFile(loose, "first");
+    const put = library.catalog.put.bind(library.catalog);
+    let saved = false;
+    library.catalog.put = (item) => {
+      // An editor saves between the copy and the clean-up.
+      if (!saved) writeFileSync(loose, "second, longer");
+      saved = true;
+      return put(item);
+    };
+    const [entry] = await library.previewPaths([loose]);
+    await library.importEntries([{ ...entry, inPlace: true }]);
+    library.catalog.put = put;
+    assert.equal(await readFile(loose, "utf8"), "second, longer");
+  });
+});
+
+test("a recovery journal cannot move files outside the library", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "obelisk-safety-"));
+  try {
+    const archive = path.join(root, "lib");
+    await (await openLibrary(archive)).close();
+    await writeFile(path.join(root, "outside.txt"), "mine");
+    await writeFile(
+      path.join(archive, ".obelisk", "journal.json"),
+      JSON.stringify({ schemaVersion: 1, steps: [{ from: "../outside.txt", to: "Inbox/taken.txt" }] }),
+    );
+    await (await openLibrary(archive)).close();
+    assert.equal(await readFile(path.join(root, "outside.txt"), "utf8"), "mine");
+    assert.ok(!(await exists(path.join(archive, "Inbox", "taken.txt"))));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("moving a file that shares its folder moves only that file", async () => {
+  await withLibrary(async (library, root) => {
+    const item = await add(library, root, "notes.txt", "notes");
+    const other = await add(library, root, "other.txt", "other");
+    // Both files are dragged loose into Documents in Finder; a check follows them.
+    for (const i of [item, other])
+      await rename(path.join(library.archiveRoot, i.path), path.join(library.archiveRoot, "Documents", path.basename(i.path)));
+    await library.check();
+    const [moved] = await library.moveItems([item.id], named(library, "Inbox").id);
+    assert.equal(moved, item.id);
+    const now = library.catalog.get(item.id);
+    assert.ok(now.path.startsWith("Inbox/"));
+    assert.equal(await readFile(path.join(library.archiveRoot, now.path), "utf8"), "notes");
+    assert.equal(now.manifestPath, undefined, "its manifest came along");
+    assert.ok(await exists(path.join(library.archiveRoot, "Documents", path.basename(other.path))), "the rest stayed");
+    await library.updateMetadata(item.id, { title: "Moved notes" });
+  });
+});
+
+test("a move that fails partway is undone, leaving nothing half-moved", { skip: process.getuid?.() === 0 }, async () => {
+  await withLibrary(async (library, root) => {
+    const first = await add(library, root, "a.txt", "a");
+    const locked = await library.folders.create(named(library, "Documents").id, "Locked");
+    const second = await add(library, root, "b.txt", "b", locked.id);
+    const lockedDir = path.join(library.archiveRoot, locked.dir);
+    const inbox = path.join(library.archiveRoot, "Inbox");
+    const inboxBefore = (await readdir(inbox)).sort();
+    await chmod(lockedDir, 0o555);
+    try {
+      await assert.rejects(library.moveItems([first.id, second.id], named(library, "Inbox").id));
+    } finally {
+      await chmod(lockedDir, 0o755);
+    }
+    // The first file was moved before the second failed; it's back where it was.
+    const back = library.catalog.get(first.id);
+    assert.ok(!back.path.startsWith("Inbox/"));
+    assert.equal(await readFile(path.join(library.archiveRoot, back.path), "utf8"), "a");
+    assert.deepEqual((await readdir(inbox)).sort(), inboxBefore, "no empty folders left behind");
+    assert.ok(!(await exists(path.join(library.archiveRoot, ".obelisk", "journal.json"))));
+  });
+});
+
+test("recovery that can't finish a rename keeps its plan and finishes on a later opening", { skip: process.getuid?.() === 0 }, async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "obelisk-safety-"));
+  try {
+    const archive = path.join(root, "lib");
+    await (await openLibrary(archive)).close();
+    await mkdir(path.join(archive, "Documents", "Thing"));
+    await writeFile(path.join(archive, "Documents", "Thing", "note.txt"), "kept");
+    await mkdir(path.join(archive, "Locked"));
+    const journal = path.join(archive, ".obelisk", "journal.json");
+    await writeFile(journal, JSON.stringify({ schemaVersion: 1, steps: [{ from: "Documents/Thing", to: "Locked/Thing" }] }));
+    await chmod(path.join(archive, "Locked"), 0o555);
+    try {
+      await (await openLibrary(archive)).close();
+      assert.ok(await exists(journal), "the plan is kept when its rename fails");
+      assert.ok(await exists(path.join(archive, "Documents", "Thing", "note.txt")));
+    } finally {
+      await chmod(path.join(archive, "Locked"), 0o755);
+    }
+    await (await openLibrary(archive)).close();
+    assert.ok(!(await exists(journal)));
+    assert.equal(await readFile(path.join(archive, "Locked", "Thing", "note.txt"), "utf8"), "kept");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a package changed while it's imported is kept; an unchanged one is tidied away", async () => {
+  await withLibrary(async (library) => {
+    const make = async (name) => {
+      const pkg = path.join(library.archiveRoot, "Documents", name);
+      await mkdir(path.join(pkg, "Data"), { recursive: true });
+      await writeFile(path.join(pkg, "index.xml"), "<doc/>");
+      await writeFile(path.join(pkg, "Data", "image.png"), "png");
+      return pkg;
+    };
+    const changing = await make("Draft.pages"),
+      still = await make("Final.pages");
+    const put = library.catalog.put.bind(library.catalog);
+    let saved = false;
+    library.catalog.put = (item) => {
+      // An app saves into the package between the copy and the clean-up.
+      if (!saved && item.title?.startsWith("Draft")) writeFileSync(path.join(changing, "Data", "image.png"), "a newer, longer image");
+      saved ||= item.title?.startsWith("Draft");
+      return put(item);
+    };
+    const entries = await library.previewPaths([changing, still]);
+    assert.ok(entries.every((e) => e.bundle), "both are read as packages");
+    await library.importEntries(entries.map((e) => ({ ...e, inPlace: true })));
+    library.catalog.put = put;
+    assert.equal(await readFile(path.join(changing, "Data", "image.png"), "utf8"), "a newer, longer image");
+    assert.ok(!(await exists(still)), "an unchanged package is removed once it's in the library");
+  });
+});
+
+test("a checked item can be moved and then edited", async () => {
+  await withLibrary(async (library, root) => {
+    const item = await add(library, root, "song.mp3", "audio");
+    await library.check();
+    await library.moveItems([item.id], named(library, "Inbox").id);
+    await library.updateMetadata(item.id, { title: "Renamed" });
+    assert.equal(library.catalog.get(item.id).title, "Renamed");
+  });
+});
+
+test("a removed item whose manifest was apart from its file stays removed", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "obelisk-safety-"));
+  try {
+    const archive = path.join(root, "lib");
+    let library = await openLibrary(archive);
+    const item = await add(library, root, "paper.pdf", "%PDF-1.4");
+    await rename(path.join(archive, item.path), path.join(archive, "Inbox", "paper.pdf"));
+    await library.check();
+    assert.ok(library.catalog.get(item.id).manifestPath);
+    await library.removeItems([item.id], trashIn(path.join(root, "bin")));
+    await library.close();
+    await rm(path.join(archive, ".obelisk", "catalog.sqlite"), { force: true });
+    library = await openLibrary(archive);
+    assert.ok(!library.catalog.get(item.id));
+    await library.close();
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

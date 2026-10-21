@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Offline encyclopedia</title>
+    <script src="../theme.js"></script>
+    <link rel="stylesheet" href="reader.css" />
+  </head>
+  <body>
+    <header>
+      <nav aria-label="Article navigation">
+        <button id="back" aria-label="Back" title="Back" disabled>←</button
+        ><button id="forward" aria-label="Forward" title="Forward" disabled>
+          →</button
+        ><button id="home" aria-label="Archive home" title="Archive home">
+          ⌂
+        </button>
+      </nav>
+      <form id="search">
+        <input
+          id="query"
+          type="search"
+          placeholder="Search this archive"
+          aria-label="Search this archive"
+          maxlength="256"
+          autocomplete="off"
+        /><select id="mode" aria-label="Search in">
+          <option value="titles">Titles</option>
+          <option value="fulltext">All text</option></select
+        ><button type="submit" aria-label="Search">Search</button>
+      </form>
+      <div class="size">
+        <button id="smaller" aria-label="Smaller text">A−</button
+        ><button id="larger" aria-label="Larger text">A+</button>
+      </div>
+    </header>
+    <div id="message" role="status" hidden></div>
+    <section id="results" aria-label="Search results" hidden>
+      <div class="results-head">
+        <span id="result-count"></span
+        ><button id="close-results" aria-label="Close search results">×</button>
+      </div>
+      <div id="matches"></div>
+    </section>
+    <iframe
+      id="article"
+      title="Offline article"
+      sandbox="allow-same-origin"
+      referrerpolicy="no-referrer"
+    ></iframe>
+    <footer>
+      <span id="location">Opening archive…</span
+      ><span id="offline">Offline</span>
+    </footer>
+    <script type="module" src="reader.bundle.js"></script>
+  </body>
+</html>
