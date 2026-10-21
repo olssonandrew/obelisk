@@ -19,7 +19,7 @@ replace the runtime without updating its checksums and source record.
 |---|---|---|
 | OpenZIM javascript-libzim (WASM) | GPL-3.0-or-later | `desktop/zim/vendor/` |
 | MapLibre GL JS | BSD-3-Clause | `desktop/map/vendor/` (built by `npm run build`) |
-| PMTiles | BSD-3-Clause | `desktop/map/vendor/`, [PMTiles-LICENSE.txt](PMTiles-LICENSE.txt) |
+| PMTiles | BSD-3-Clause | `desktop/map/vendor/`, [license text](#pmtiles-license) |
 | @protomaps/basemaps | BSD-3-Clause | `desktop/map/vendor/` |
 | pdf.js | Apache-2.0 | `desktop/renderer/reader/vendor/` (built by `npm run build`) |
 | JSZip | MIT (chosen of its dual license) | `desktop/renderer/reader/vendor/` |
@@ -49,6 +49,17 @@ standalone releases contain GPLv3+ parts; FFmpeg's license depends on the build.
 | Wayback Machine | Earlier copies of web pages | Polite use: one shared connection, spaced lookups |
 | Collection sources | Files listed in `collections/` | Each entry records its source's rights statement |
 
+## Visual art collections
+
+- **Paintings, drawings, and original prints:** Art Institute of Chicago, Cleveland
+  Museum of Art, and Metropolitan Museum of Art, public domain/CC0 images; National
+  Gallery of Art, public-domain Open Access images and CC0 metadata. Cleveland
+  metadata and accompanying descriptions are also CC0. Individual Wikimedia Commons
+  records identify the landmark painting reproductions as public domain (PD-Art).
+- **Photography:** Cleveland Museum of Art, CC0; Library of Congress individual
+  records state "No known restrictions" or "No known restrictions on publication."
+  These advisories are retained rather than relabeled as a Creative Commons license.
+
 ## Demo and screenshots
 
 The README screenshots are captured with `npm run screenshots` from the demo library
@@ -60,3 +71,27 @@ built by `npm run demo:library`. Its contents:
 - **Film trailers:** Blender Foundation, CC BY 3.0.
 - **Maps:** OpenStreetMap, as above.
 - **Wikipedia:** Kiwix, CC BY-SA.
+
+## PMTiles license
+
+```text
+The below license (BSD-3) applies to the reference implementations in this repository.
+
+The PMTiles specification itself is public domain, or CC0 where applicable.
+
+Sample tilesets available in this repository are subject to their own license terms.
+
+---
+
+Copyright 2021 Protomaps LLC
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```

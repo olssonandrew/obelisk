@@ -74,13 +74,14 @@ twice.
 ## In the app
 
 - **Sidebar:** folders and their subfolders, Inbox first. Each section (Shortcuts,
-  Folders, Tags) folds away from its heading.
+  Folders, Tags) folds away from its heading. Clicking a folder opens it and reveals
+  its subfolders; its arrow can collapse the branch.
 - **Dragging:**
   - **onto a folder** puts it inside
   - **onto the line between folders** puts it beside them, in that place
   - **just below an open folder** puts it first inside that folder
 - **Main view:** subfolders as tiles, then the files at this level. **Show
-  subfolders** shows everything below.
+  subfolders** shows everything below. Its switch keeps the thumb centered in either position.
 - **Empty folders** say how to fill them. **Backups**, found by name, says what
   belongs there.
 - **Format filters** like "All audio" work across the whole library. They're a filter,

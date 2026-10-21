@@ -76,7 +76,7 @@ select {
     0.85em/1.6 ui-monospace,
     monospace;
 }
-#content a {
+#content a[href]:not([href=""]) {
   color: inherit;
   text-decoration: underline;
 }
@@ -105,4 +105,9 @@ body.pdf {
 }
 [hidden] {
   display: none !important;
+}
+
+#content [id],
+#content a[name] {
+  scroll-margin-top: 64px;
 }

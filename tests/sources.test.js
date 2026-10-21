@@ -11,6 +11,8 @@ import { parseXml } from '../packages/sources/xml.js';
 import { openCatalog, rebuildCatalog } from '../packages/core/catalog.js';
 import { importFile } from '../packages/core/archive.js';
 import { createDownloads } from '../packages/core/downloads.js';
+import { createSources } from '../packages/sources/service.js';
+import http from 'node:http';
 
 const rss = `<?xml version="1.0"?><rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"><channel><title>A &amp; B</title><copyright>Publisher retains rights</copyright><item><title>One / Two</title><itunes:title>One / Two</itunes:title><guid>stable-1</guid><pubDate>Fri, 09 Oct 2026 12:00:00 GMT</pubDate><description><![CDATA[<p>Hello &amp; welcome</p>]]></description><enclosure url="https://example.org/audio?id=1" type="audio/mpeg" length="123"/></item><item><title>Repeated</title><guid>stable-1</guid><enclosure url="https://example.org/duplicate.mp3" type="audio/mpeg"/></item><item><title>No media</title></item><item><title>Unsafe link</title><enclosure url="file:///secret" type="audio/mpeg"/></item></channel></rss>`;
 test('RSS preserves namespaced titles, stable identities, dates, and enclosure formats', () => {
@@ -25,6 +27,34 @@ test('Atom enclosures work and XML custom entities are rejected', () => {
   const atom = '<feed><title>Show</title><entry><title>Episode</title><id>1</id><link rel="enclosure" type="audio/mp4" href="/episode.m4a"/></entry></feed>';
   assert.equal(parsePodcast(atom, 'https://example.org/feed').episodes[0].url, 'https://example.org/episode.m4a');
   assert.throws(() => parseXml('<!DOCTYPE x [<!ENTITY a "boom">]><x>&a;</x>'), /entities/);
+});
+test('large podcast feeds keep every episode and can queue the newest and oldest beyond the directory choice limit', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'obelisk-large-podcast-'));
+  const items = Array.from({ length: 2105 }, (_, i) => `<item><title>Episode ${i}</title><guid>${i}</guid><pubDate>${new Date(Date.UTC(2026, 0, 1) - i * 86400000).toUTCString()}</pubDate><enclosure url="https://example.org/${i}.mp3" type="audio/mpeg"/></item>`).reverse().join('');
+  const xml = `<rss><channel><title>Large show</title>${items}</channel></rss>`;
+  let requests = 0;
+  const server = http.createServer((req, res) => { requests++; res.end(xml); });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const url = `http://127.0.0.1:${server.address().port}/feed`;
+  const queued = [];
+  try {
+    // A cache written by the old parser must not hide the older episodes after upgrade.
+    await writeFile(path.join(root, 'sources.json'), JSON.stringify({ version: 1, followed: [], cache: { [`feed:${url}`]: { fetched: Date.now(), data: { episodes: [] } } } }));
+    const sources = await createSources({ root, catalog: { list: () => [] }, downloads: { addPlan: plan => { queued.push(plan); return plan; } } });
+    const feed = await sources.feed(url);
+    assert.equal(feed.episodes.length, 2105);
+    assert.equal(feed.episodes[0].title, 'Episode 0');
+    assert.equal(feed.episodes.at(-1).title, 'Episode 2104');
+    await sources.acquire(feed.episodes[0].key);
+    await sources.acquire(feed.episodes.at(-1).key);
+    assert.deepEqual(queued.map(plan => plan.source.episodeId), ['0', '2104']);
+    await sources.feed(url);
+    assert.equal(requests, 1, 'paging and repeat visits can use the complete cached feed');
+    await assert.rejects(sources.acquire('podcast:unknown'), /expired/);
+  } finally {
+    await new Promise(resolve => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
 });
 test('public podcast search does not require credentials and deduplicates feeds', async () => {
   const fetchImpl = async () => new Response(JSON.stringify({ results: [1, 2].map(id => ({ collectionId: id, collectionName: 'Show', feedUrl: 'https://example.org/rss' })) }));

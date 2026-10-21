@@ -28,7 +28,7 @@ code.
 | Wikipedia and other Kiwix editions, read in the app | ✅ | [architecture.md](architecture.md#readers) |
 | Wikipedia page: just the full encyclopedia, with and without images | 📋 | Topic editions stay listed from Kiwix; not contributable. |
 | Offline maps of any area, with a resizable frame | ✅ | |
-| Podcasts: search, follow, save episodes | ✅ | |
+| Podcasts: search, follow, save episodes | ✅ | Browse all feed episodes in pages of 100; selections carry across pages. |
 | Video from a link | ✅ | [architecture.md](architecture.md#readers) |
 | Software and AI models | ✅ | |
 | Downloads: resume, retries, rate limits, polite per-server limits | ✅ | [collections.md](collections.md#when-servers-push-back) |
@@ -38,6 +38,7 @@ code.
 | Feature | Status | Notes |
 |---|---|---|
 | Collections v1: podcasts, websites, books, documents, images, music, audiobooks, video | ✅ | [collections.md](collections.md) |
+| Collection browsing within importers | ✅ | Up to 12 random collections per section; See all for longer lists. Featured picks stay on the homepage. |
 | Contributor guide, `npm run collections` check and fill, weekly link check | ✅ | [collections/README.md](../collections/README.md) |
 | Live list from the repository | 🔨 | Set `obelisk.collections` in `package.json` once the repo is public. |
 | More starter collections, and a robustness pass | 🔨 | |
@@ -55,6 +56,7 @@ code.
 
 | Feature | Status | Notes |
 |---|---|---|
+| PMTiles license notice | ✅ | Kept in [third-party.md](third-party.md#pmtiles-license); the build emits its standalone vendor notice. |
 | Tests on Mac, Windows and Linux for every push | ✅ | Configured; has never run, as there's no remote yet. |
 | Release builds for Mac, Windows and Linux from CI, on a version tag | 📋 | Each build is launched on its runner before upload; unsigned at first. File names must match the README's download table, and builds need `npm run setup:maps` first so maps work. |
 | Mac signing and notarization | 💡 | Needs an Apple Developer account. |
@@ -75,6 +77,8 @@ code.
 
 | Fix | Status | Notes |
 |---|---|---|
-| Better EPUB and PDF reading | 📋 | Both feel basic now: layout, page turning, table of contents, search, remembering your place. |
+| Sidebar folder clicks reveal subfolders | ✅ | Clicking opens the folder and expands its sidebar branch; the arrow still collapses it. |
+| Show subfolders switch alignment | ✅ | Thumb stays centered in both positions, independent of general input styling. |
+| Better EPUB and PDF reading | 📋 | EPUB cover wrappers retain their images, empty sections explain themselves, and bookmark styling, EPUB 2/3 chapter labels, encoded footnotes and arrow-key navigation are fixed. Still planned: search, remembering your place, richer layout and PDF navigation. |
 | Large libraries | 📋 | Startup, search and scrolling are benchmarked at 50,000 files (`npm run bench`); moves and checks at that size aren't yet, and some moves scan the whole catalog. |
 | Windows and Linux rough edges | 💡 | Expected once people use them; tested only in CI so far. |

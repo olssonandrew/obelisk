@@ -1,3 +1,10 @@
 {
-  "featured": ["art-institute-paintings", "a-first-shelf-of-classics", "the-early-web", "apollo-press-kits"]
+  "featured": [
+    "art-institute-paintings",
+    "a-first-shelf-of-classics",
+    "the-early-web",
+    "apollo-press-kits",
+    "drawing-through-the-centuries",
+    "photography-invention-to-documentary"
+  ]
 }

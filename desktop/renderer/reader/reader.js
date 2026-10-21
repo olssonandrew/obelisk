@@ -19,7 +19,7 @@ let page = 0,
   textSize = 16,
   renderPage,
   revision = 0;
-const blobs = [];
+let blobs = [];
 let openLink = () => {};
 function fail(error) {
   status.hidden = false;
@@ -32,9 +32,13 @@ function xml(text) {
   return doc;
 }
 function relative(base, href) {
-  const url = new URL(href, "https://book.invalid/" + base);
-  if (url.origin !== "https://book.invalid") return null;
-  return decodeURIComponent(url.pathname.slice(1));
+  try {
+    const url = new URL(href, "https://book.invalid/" + base);
+    if (url.origin !== "https://book.invalid") return null;
+    return decodeURIComponent(url.pathname.slice(1));
+  } catch {
+    return null;
+  }
 }
 // Only local raster images and inert book markup enter the reading surface.
 function clean(html) {
@@ -67,7 +71,9 @@ async function show() {
   try {
     await renderPage(token);
     if (token !== revision) return;
-    status.hidden = true;
+    const empty = ext === "epub" && !content.textContent.trim() && !content.querySelector("img[src]");
+    status.hidden = !empty;
+    if (empty) status.textContent = "This section has no readable content. Choose another chapter.";
     position.textContent = `${page + 1} / ${count}`;
     chapters.value = String(page);
     content.scrollIntoView();
@@ -104,14 +110,31 @@ for (const [id, delta] of [
     textSize = Math.max(12, Math.min(28, textSize + delta));
     content.style.fontSize = textSize + "px";
   };
+function scrollToAnchor(hash) {
+  let name;
+  try { name = decodeURIComponent(hash); } catch { return; }
+  const target = [...content.querySelectorAll("[id], a[name]")].find(
+    (element) => element.id === name || element.getAttribute("name") === name,
+  );
+  target?.scrollIntoView();
+}
 content.addEventListener("click", (event) => {
-  const a = event.target.closest("a");
+  const a = event.target.closest("a[href]");
   if (!a) return;
   event.preventDefault();
-  const hash = a.getAttribute("href");
-  if (hash?.startsWith("#"))
-    document.getElementById(hash.slice(1))?.scrollIntoView();
-  else openLink(hash);
+  const href = a.getAttribute("href");
+  if (href.startsWith("#")) scrollToAnchor(href.slice(1));
+  else openLink(href);
+});
+document.addEventListener("keydown", (event) => {
+  if (ext !== "epub" || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
+      event.target.closest("button, select, input, textarea, [contenteditable]") ||
+      !getSelection().isCollapsed) return;
+  const button = event.key === "ArrowLeft" ? previous : event.key === "ArrowRight" ? next : null;
+  if (button && !button.disabled) {
+    event.preventDefault();
+    button.click();
+  }
 });
 window.addEventListener("unload", () =>
   blobs.forEach((url) => URL.revokeObjectURL(url)),
@@ -205,28 +228,46 @@ try {
           page = index;
           show().then(() => {
             const hash = href.split("#")[1];
-            if (hash)
-              document
-                .getElementById(decodeURIComponent(hash))
-                ?.scrollIntoView();
+            if (hash) scrollToAnchor(hash);
           });
         }
       };
       const navItem = [...items.values()].find((item) =>
         item.getAttribute("properties")?.split(/\s+/).includes("nav"),
       );
-      if (navItem) {
-        const navPath = relative(packagePath, navItem.getAttribute("href"));
-        const nav = xml(await read(navPath));
-        for (const link of nav.querySelectorAll("a[href]")) {
-          const index = chapterPaths.indexOf(
-            relative(navPath, link.getAttribute("href")),
-          );
-          if (index >= 0)
-            chapters.options[index].textContent = link.textContent
-              .trim()
-              .slice(0, 80);
+      const namedChapters = new Set();
+      const labelChapter = (base, href, label) => {
+        const index = chapterPaths.indexOf(relative(base, href));
+        const title = label?.trim().replace(/\s+/g, " ").slice(0, 80);
+        if (index >= 0 && title && !namedChapters.has(index)) {
+          chapters.options[index].textContent = title;
+          namedChapters.add(index);
         }
+      };
+      // A damaged optional table of contents must not prevent reading the book.
+      try {
+        if (navItem) {
+          const navPath = relative(packagePath, navItem.getAttribute("href"));
+          const nav = xml(await read(navPath));
+          const toc = [...nav.querySelectorAll("nav")].find((element) =>
+            (element.getAttribute("epub:type") || element.getAttribute("type") || "")
+              .split(/\s+/).includes("toc"),
+          ) || nav.querySelector("nav");
+          for (const link of toc?.querySelectorAll("a[href]") || [])
+            labelChapter(navPath, link.getAttribute("href"), link.textContent);
+        }
+        const ncxItem = items.get(packageDoc.querySelector("spine")?.getAttribute("toc")) ||
+          [...items.values()].find((item) => item.getAttribute("media-type") === "application/x-dtbncx+xml");
+        if (ncxItem) {
+          const ncxPath = relative(packagePath, ncxItem.getAttribute("href"));
+          const ncx = xml(await read(ncxPath));
+          for (const point of ncx.querySelectorAll("navPoint")) {
+            const target = point.querySelector("content")?.getAttribute("src");
+            if (target) labelChapter(ncxPath, target, point.querySelector("navLabel")?.textContent);
+          }
+        }
+      } catch {
+        // Chapter headings remain available when navigation metadata is missing.
       }
 
       renderPage = async (token) => {
@@ -235,14 +276,25 @@ try {
           await read(file),
           "text/html",
         );
-        const images = [...raw.querySelectorAll("img")].map((img) =>
-          img.getAttribute("src"),
-        );
+        // Gutenberg covers wrap a raster image in SVG. Keep the image without
+        // admitting active SVG markup into the document.
+        for (const svg of raw.querySelectorAll("svg")) {
+          const images = [...svg.querySelectorAll("image")].map((image) => {
+            const img = raw.createElement("img");
+            img.setAttribute("src", image.getAttribute("href") || image.getAttributeNS("http://www.w3.org/1999/xlink", "href") || image.getAttribute("xlink:href") || "");
+            img.alt = svg.querySelector("title")?.textContent || raw.title || "Book illustration";
+            return img;
+          });
+          if (images.length) svg.replaceWith(...images);
+        }
+        // Keep image references attached to their element through sanitization.
+        for (const img of raw.querySelectorAll("img"))
+          img.setAttribute("data-book-src", img.getAttribute("src") || "");
         const fragment = clean(raw.body.innerHTML);
-        for (const [index, img] of [
-          ...fragment.querySelectorAll("img"),
-        ].entries()) {
-          const imagePath = relative(file, images[index] || "");
+        const chapterBlobs = [];
+        for (const img of fragment.querySelectorAll("img")) {
+          const imagePath = relative(file, img.getAttribute("data-book-src") || "");
+          img.removeAttribute("data-book-src");
           if (!imagePath || !/\.(png|jpe?g|gif|webp)$/i.test(imagePath))
             continue;
           const image = zip.file(imagePath);
@@ -255,15 +307,17 @@ try {
                 "image/" + imagePath.split(".").pop().replace("jpg", "jpeg"),
             }),
           );
-          blobs.push(objectURL);
+          chapterBlobs.push(objectURL);
           img.src = objectURL;
         }
         if (token === revision) {
+          blobs.forEach((url) => URL.revokeObjectURL(url));
+          blobs = chapterBlobs;
           content.replaceChildren(fragment);
           const heading = content.querySelector("h1,h2,h3")?.textContent;
-          if (heading)
+          if (heading && !namedChapters.has(page))
             chapters.options[page].textContent = heading.slice(0, 80);
-        }
+        } else chapterBlobs.forEach((url) => URL.revokeObjectURL(url));
       };
     } else {
       const text = await response.text();

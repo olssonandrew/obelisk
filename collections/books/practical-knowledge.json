@@ -1,0 +1,82 @@
+{
+  "id": "practical-knowledge",
+  "type": "books",
+  "title": "Practical knowledge",
+  "summary": "Woodworking, baking ingredients, food handling, meat preparation and technical writing.",
+  "topics": [
+    "learning",
+    "technology"
+  ],
+  "language": "en",
+  "curator": "Obelisk",
+  "updated": "2026-10-21",
+  "parallel": 1,
+  "entries": [
+    {
+      "id": "woodworkingmachinery",
+      "title": "Woodworking Machinery",
+      "creator": "Sandra Carr",
+      "url": "https://pressbooks.bccampus.ca/woodworkingmachinery/open/download?type=epub",
+      "source": "https://pressbooks.bccampus.ca/woodworkingmachinery/",
+      "rights": "CC BY 4.0, except where noted",
+      "description": "Tooling, machine setup and workshop operations.",
+      "bytes": 24036940,
+      "sha256": "aeab087f5ccceee34ff16a6201854b6d869de2c4964072beb1393c5ad15ee0f9"
+    },
+    {
+      "id": "technicalwritingessentialsfirstedition",
+      "title": "Technical Writing Essentials (first edition)",
+      "creator": "Suzan Last",
+      "url": "https://pressbooks.bccampus.ca/technicalwriting/open/download?type=epub",
+      "source": "https://pressbooks.bccampus.ca/technicalwriting/",
+      "rights": "CC BY 4.0, except where noted",
+      "description": "Instructions, reports, diagrams and explaining technical work clearly. First edition lists EPUB.",
+      "bytes": 11070763,
+      "sha256": "61a32c198188d75e9e31e65a5cc14279720f373e843d0b3ba5e8ea1bab8d6f6c"
+    },
+    {
+      "id": "foodsafetysanitationandpersonalhygiene",
+      "title": "Food Safety, Sanitation, and Personal Hygiene",
+      "creator": "The BC Cook Articulation Committee",
+      "url": "https://opentextbc.ca/foodsafety/open/download?type=epub",
+      "source": "https://opentextbc.ca/foodsafety/",
+      "rights": "CC BY 4.0, except where noted",
+      "description": "Food handling, storage, sanitation and kitchen practice.",
+      "bytes": 1332169,
+      "sha256": "1b0693808a98560b9e65573034226cdaecca12bdfd68d67e978ece240bba6b78"
+    },
+    {
+      "id": "meatcuttingandprocessingforfoodservice",
+      "title": "Meat Cutting and Processing for Food Service",
+      "creator": "The BC Cook Articulation Committee",
+      "url": "https://opentextbc.ca/meatcutting/open/download?type=epub",
+      "source": "https://opentextbc.ca/meatcutting/",
+      "rights": "CC BY 4.0, except where noted",
+      "description": "Cuts, preparation methods and working with different meats.",
+      "bytes": 8816193,
+      "sha256": "bb321964183a0a522379284baf25569380a5eb5fb3ecafe4499e62fac14dc2a7"
+    },
+    {
+      "id": "understandingingredientsforthecanadianbaker",
+      "title": "Understanding Ingredients for the Canadian Baker",
+      "creator": "The BC Cook Articulation Committee",
+      "url": "https://opentextbc.ca/ingredients/open/download?type=epub",
+      "source": "https://opentextbc.ca/ingredients/",
+      "rights": "CC BY 4.0, except where noted",
+      "description": "How flour, yeast, fats, water and other ingredients behave.",
+      "bytes": 5102543,
+      "sha256": "e319d284ab3a072cebfb317d413a02b98ce53b8ba3b9a505487bcfbcd25f9c91"
+    },
+    {
+      "id": "pg-21531",
+      "title": "Woodwork Joints",
+      "creator": "William Fairham",
+      "url": "https://mirror.cs.odu.edu/gutenberg-epub/21531/pg21531-images-3.epub",
+      "source": "https://www.gutenberg.org/ebooks/21531",
+      "rights": "Public domain in the USA.",
+      "description": "Historical hand-tool joinery reference, selected for durable diagrams and methods; not a modern machine-safety manual.",
+      "bytes": 3072444,
+      "sha256": "e880b7596236a696c0aad564dd6ef988ecb480f47582c519257ccc5904eddae7"
+    }
+  ]
+}

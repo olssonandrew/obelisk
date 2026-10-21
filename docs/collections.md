@@ -32,9 +32,10 @@ is how the system works.
 ## In the app
 
 - **Where collections show up:** four featured collections, picked at random each
-  launch, below the types on Add content's front page; each importer's own collections
-  at the bottom of its page, featured first; and **See all**, with search and topic
-  filters, which is how a type with dozens of collections is browsed.
+  launch, below the types on Add content's front page. Each importer shows up to 12
+  of its collections in a random order that stays fixed for the session, without
+  featured priority. **See all** appears when there are more than 12, with an
+  alphabetical list, search and topic filters.
 - **Offline,** each collections space says "You're offline" instead, since saving needs
   the internet. The app uses the system's own online signal, so this costs nothing, and
   collections come back when the connection does.
@@ -68,16 +69,17 @@ is how the system works.
 Failures are sorted by what can be done about them, in
 `packages/core/transfer-errors.js`.
 
-| What happened | Kind | What Obelisk does | What people see |
-|---|---|---|---|
-| Asked to slow down (429, or 503 with Retry-After) | busy | Waits at least as long as asked, longer each time it repeats (up to 15 minutes), then carries on by itself. Everything from that server waits. Gives up after 8 tries. | "… asked Obelisk to slow down. Continuing at 5:01 PM." |
-| Connection failed, timed out or ended early; a passing server fault (5xx) | offline | Retries after 10 s, 20 s, 40 s…, up to 5 tries, resuming where the file stopped if it can. | "Couldn't reach … Trying again by itself." |
-| Refused (401, 403), or a web page instead of the file | refused | No retry. After 3 refusals in a row from one server, the collection's other files from it pause. | "… is refusing downloads (3 files turned away), so the others are paused." |
-| Gone (404, 410) | gone | Asked once, never again. | "1 file can't be saved: no longer at the source." |
-| Not the file described (checksum, size, or the wrong kind of file) | changed | Nothing saved; never retried. | "… changed at the source since this collection was made." |
-| Disk full | space | Everything pauses. | "Free some space, then resume." |
+| What happened                                                             | Kind    | What Obelisk does                                                                                                                                                      | What people see                                                            |
+| ------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Asked to slow down (429, or 503 with Retry-After)                         | busy    | Waits at least as long as asked, longer each time it repeats (up to 15 minutes), then carries on by itself. Everything from that server waits. Gives up after 8 tries. | "… asked Obelisk to slow down. Continuing at 5:01 PM."                     |
+| Connection failed, timed out or ended early; a passing server fault (5xx) | offline | Retries after 10 s, 20 s, 40 s…, up to 5 tries, resuming where the file stopped if it can.                                                                             | "Couldn't reach … Trying again by itself."                                 |
+| Refused (401, 403), or a web page instead of the file                     | refused | No retry. After 3 refusals in a row from one server, the collection's other files from it pause.                                                                       | "… is refusing downloads (3 files turned away), so the others are paused." |
+| Gone (404, 410)                                                           | gone    | Asked once, never again.                                                                                                                                               | "1 file can't be saved: no longer at the source."                          |
+| Not the file described (checksum, size, or the wrong kind of file)        | changed | Nothing saved; never retried.                                                                                                                                          | "… changed at the source since this collection was made."                  |
+| Disk full                                                                 | space   | Everything pauses.                                                                                                                                                     | "Free some space, then resume."                                            |
 
 **Stopping halfway** (an error, or Obelisk being closed) loses nothing:
+
 - Saved files stay saved.
 - **Resume** carries on with what's left, using the collection's current links.
 - Files that are gone or changed are listed, not retried.
@@ -86,6 +88,7 @@ Failures are sorted by what can be done about them, in
 
 One click can mean thousands of people each fetching hundreds of files from one
 museum.
+
 - **Per collection:** 2 files at a time by default, 1 for video, at most 4 (`parallel`
   in the collection).
 - **Per server:** at most 3 at once, with a second between starting two downloads.
@@ -99,16 +102,16 @@ museum.
 
 ## Where it lives
 
-| Path | What |
-|---|---|
-| `packages/collections/format.js` | The format, the check, recognizing files by their first bytes |
-| `packages/collections/plans.js` | Entries as importer plans |
-| `packages/collections/source.js` | The shipped, cached and published lists |
-| `packages/core/downloads.js` | Lanes, server limits, spacing, retries, refusals, grouped actions |
-| `packages/core/library.js` | Saving, folders, status, remembered deletions |
-| `desktop/renderer/collections.js` | Cards, browsing, the collection page |
-| `scripts/collections.js` | `npm run collections` (`--fill`, `--online`, `--verify`) |
-| `.github/workflows/collections.yml` | The weekly link check |
+| Path                                | What                                                              |
+| ----------------------------------- | ----------------------------------------------------------------- |
+| `packages/collections/format.js`    | The format, the check, recognizing files by their first bytes     |
+| `packages/collections/plans.js`     | Entries as importer plans                                         |
+| `packages/collections/source.js`    | The shipped, cached and published lists                           |
+| `packages/core/downloads.js`        | Lanes, server limits, spacing, retries, refusals, grouped actions |
+| `packages/core/library.js`          | Saving, folders, status, remembered deletions                     |
+| `desktop/renderer/collections.js`   | Cards, browsing, the collection page                              |
+| `scripts/collections.js`            | `npm run collections` (`--fill`, `--online`, `--verify`)          |
+| `.github/workflows/collections.yml` | The weekly link check                                             |
 
 The published address is `obelisk.collections` in `package.json`, set once the
 repository is public. Until then the app uses its shipped copy.

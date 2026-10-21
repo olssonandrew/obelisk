@@ -42,10 +42,10 @@ await copyFile(
   path.join(root, "node_modules/maplibre-gl/LICENSE.txt"),
   path.join(vendor, "maplibre-LICENSE.txt"),
 );
-await copyFile(
-  path.join(root, "docs/PMTiles-LICENSE.txt"),
-  path.join(vendor, "pmtiles-LICENSE.txt"),
-);
+const thirdParty = await readFile(path.join(root, "docs/third-party.md"), "utf8");
+const pmtilesLicense = thirdParty.match(/^## PMTiles license\n\n```text\n([\s\S]*?)\n```/m)?.[1];
+if (!pmtilesLicense) throw new Error("PMTiles license is missing from docs/third-party.md.");
+await writeFile(path.join(vendor, "pmtiles-LICENSE.txt"), pmtilesLicense + "\n");
 // The cartography: Protomaps' own style for the tiles this app downloads.
 await build({
   entryPoints: [path.join(root, "node_modules/@protomaps/basemaps/dist/esm/index.js")],

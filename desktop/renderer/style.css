@@ -4473,6 +4473,9 @@ body.onboarding > :not(#onboarding):not(#toast):not(.window-drag) {
 .switch input {
   appearance: none;
   margin: 0;
+  padding: 0;
+  border: 0;
+  flex: none;
   width: 30px;
   height: 18px;
   border-radius: 9px;

@@ -173,7 +173,7 @@ export function createCollections({ desktop, toast, openImporter, openFeed, open
       list = shuffled(featured.length ? featured : all).slice(0, 4);
     return section("Collections", list, { kind: "home" }, all.length > list.length ? all.length : 0);
   }
-  /** An importer's own collections, featured first; null when it has none. */
+  /** Up to twelve of an importer's collections in session-random order. */
   async function strip(importer) {
     await load();
     if (importer === "podcasts") return shows();
@@ -181,8 +181,7 @@ export function createCollections({ desktop, toast, openImporter, openFeed, open
     if (!list.length) return null;
     const title = list.length === 1 ? "Collection" : "Collections";
     if (!navigator.onLine) return offline(title);
-    const featured = new Set(data.featured),
-      shown = shuffled(list).sort((a, b) => featured.has(b.id) - featured.has(a.id)).slice(0, 3);
+    const shown = shuffled(list).slice(0, 12);
     return section(title, shown, { kind: "importer", importer }, list.length > shown.length ? list.length : 0, importer);
   }
   /** The recommended shows, each opening above in the Podcasts page. */
@@ -301,8 +300,7 @@ export function createCollections({ desktop, toast, openImporter, openFeed, open
     function drawGrid() {
       const q = filters.query.trim().toLowerCase(),
         shown = list.filter((c) => (!filters.topic || c.topics.includes(filters.topic)) && (!q || `${c.title} ${c.summary} ${c.curator}`.toLowerCase().includes(q)));
-      const featured = new Set(data.featured);
-      shown.sort((a, b) => featured.has(b.id) - featured.has(a.id) || a.title.localeCompare(b.title));
+      shown.sort((a, b) => a.title.localeCompare(b.title));
       grid.replaceChildren(...shown.map((c) => card(c, { kind: "all", back: page.back, type: page.type })));
       if (!shown.length) grid.append(el("p", "No collections match.", "muted"));
       hydrateIcons(grid);
@@ -420,7 +418,7 @@ export function createCollections({ desktop, toast, openImporter, openFeed, open
         const date = k.slice(entry.id.length + 1),
           s = entries[k],
           locked = !!s && s.state !== "new";
-        const label = date === "live" ? "Today" : new Date(`${date}T12:00:00Z`).toLocaleDateString(undefined, { year: "numeric", month: "short" });
+        const label = date === "live" ? "Today" : new Date(`${date}T12:00:00Z`).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
         const d = el("label", "", `entry-date${chosen.has(k) ? " on" : ""}${locked ? " locked" : ""}`),
           box = el("input");
         box.type = "checkbox";

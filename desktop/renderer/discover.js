@@ -10,6 +10,7 @@ export function initSources({ api, el, size, toast, onQueued }) {
     });
   let status = {},
     currentFeed = null,
+    episodePage = 0,
     wikiStart = 0,
     wikiCount = 0,
     maps = null,
@@ -77,8 +78,8 @@ export function initSources({ api, el, size, toast, onQueued }) {
     <form id="podcast-search" class="discovery-search"><input name="query" required minlength="2" aria-label="Search public podcasts" placeholder="Search shows, people, or a subject"><button class="primary">Find podcasts</button></form>
     <div class="source-context"><span>Public podcast search · no account needed</span><button id="show-rss" class="text-button"><i data-icon="plus"></i>Add by RSS link</button></div>
     <form id="rss-form" class="discovery-search" hidden><input name="url" type="url" required aria-label="Podcast RSS URL" placeholder="https://example.com/podcast/feed.xml"><button class="primary">Open feed</button></form>
-    <div id="saved-shows" class="saved-shows"></div><p id="podcast-notice" class="source-note" role="status"></p><div id="podcast-results" class="discovery-grid"></div><section id="episode-panel" hidden><div class="feed-heading"><div><h2 id="feed-title"></h2><p id="feed-description"></p></div><button id="follow-show" class="secondary">Save show</button></div><div class="episode-toolbar"><label><input id="select-episodes" type="checkbox"> Select latest 10 available</label><button id="download-selected" class="primary" disabled>Download selected</button><button id="refresh-feed" class="text-button"><i data-icon="refresh"></i>Check for new episodes</button></div><div id="episodes"></div></section>
-    <details class="source-details"><summary>Sources and organization</summary><p>Search uses Apple’s public podcast directory. Episodes come directly from the publisher’s RSS feed and original media links. Saved shows are bookmarks: Obelisk checks for new episodes when you ask, without downloading them automatically. Episodes are grouped by show, named by date and title, and remembered by their feed identity. Up to 200 recent media entries are shown. Publisher rights still apply.</p></details>`;
+    <div id="saved-shows" class="saved-shows"></div><p id="podcast-notice" class="source-note" role="status"></p><div id="podcast-results" class="discovery-grid"></div><section id="episode-panel" hidden><div class="feed-heading"><div><h2 id="feed-title"></h2><p id="feed-description"></p></div><button id="follow-show" class="secondary">Save show</button></div><div class="episode-toolbar"><label><input id="select-episodes" type="checkbox"> Select 10 available on this page</label><button id="download-selected" class="primary" disabled>Download selected</button><button id="refresh-feed" class="text-button"><i data-icon="refresh"></i>Check for new episodes</button></div><nav id="episodes-top" class="episode-pagination" aria-label="Episode pages, top"></nav><div id="episodes"></div><nav id="episodes-bottom" class="episode-pagination" aria-label="Episode pages, bottom"></nav></section>
+    <details class="source-details"><summary>Sources and organization</summary><p>Search uses Apple’s public podcast directory. Episodes come directly from the publisher’s RSS feed and original media links. Saved shows are bookmarks: Obelisk checks for new episodes when you ask, without downloading them automatically. Episodes are grouped by show, named by date and title, and remembered by their feed identity. Browse episodes 100 at a time, newest first. Only episodes included in the publisher’s feed are available. Publisher rights still apply.</p></details>`;
   $("#page-maps").innerHTML = `<div class="source-heading"><h1>Maps</h1></div>
     <p class="muted page-lede">Find a place, or move the map until the frame holds what you want.</p>
     <div class="map-planner">
@@ -228,6 +229,9 @@ export function initSources({ api, el, size, toast, onQueued }) {
     }
   });
   function selectionChanged() {
+    const available = [...$("#episodes").querySelectorAll("input:not(:disabled)")].slice(0, 10);
+    $("#select-episodes").checked = available.length > 0 && available.every((box) => selected.has(box.dataset.key));
+    $("#select-episodes").indeterminate = !$("#select-episodes").checked && available.some((box) => selected.has(box.dataset.key));
     $("#download-selected").disabled = !selected.size;
     $("#download-selected").textContent = selected.size
       ? `Download ${selected.size} episode${selected.size === 1 ? "" : "s"}`
@@ -252,41 +256,66 @@ export function initSources({ api, el, size, toast, onQueued }) {
         : "Save show";
       $("#follow-show").disabled = currentFeed.followed;
       $("#select-episodes").checked = false;
-      $("#episodes").replaceChildren();
-      for (const episode of currentFeed.episodes) {
-        const row = el("article", "", "episode-row");
-        const box = el("input");
-        box.type = "checkbox";
-        box.dataset.key = episode.key;
-        box.disabled = episode.saved;
-        box.setAttribute("aria-label", `Select ${episode.title}`);
-        box.addEventListener("change", () => {
-          box.checked
-            ? selected.add(episode.key)
-            : selected.delete(episode.key);
-          selectionChanged();
-        });
-        const body = el("div", "", "episode-copy");
-        body.append(
-          el(
-            "span",
-            `${episode.published ? new Date(episode.published).toLocaleDateString() : "Undated"}${episode.duration ? ` · ${duration(episode.duration)}` : ""}${episode.bytes ? ` · ${size(episode.bytes)}` : ""}`,
-            "source-note",
-          ),
-          el("h3", episode.title),
-          el("p", episode.description, "source-description"),
-        );
-        row.append(box, body, queueButton(episode));
-        $("#episodes").append(row);
-      }
-      if (!currentFeed.episodes.length)
-        message(
-          "#episodes",
-          "This feed has no downloadable audio or video enclosures.",
-        );
+      episodePage = 0;
+      renderEpisodes();
     } catch (error) {
       message("#podcast-results", error.message, true);
     }
+  }
+  function renderEpisodes() {
+    $("#episodes").replaceChildren();
+    for (const episode of currentFeed.episodes.slice(episodePage * 100, (episodePage + 1) * 100)) {
+      const row = el("article", "", "episode-row");
+      const box = el("input");
+      box.type = "checkbox";
+      box.dataset.key = episode.key;
+      box.disabled = episode.saved;
+      box.checked = selected.has(episode.key);
+      box.setAttribute("aria-label", `Select ${episode.title}`);
+      box.addEventListener("change", () => {
+        box.checked
+          ? selected.add(episode.key)
+          : selected.delete(episode.key);
+        selectionChanged();
+      });
+      const body = el("div", "", "episode-copy");
+      body.append(
+        el(
+          "span",
+          `${episode.published ? new Date(episode.published).toLocaleDateString() : "Undated"}${episode.duration ? ` · ${duration(episode.duration)}` : ""}${episode.bytes ? ` · ${size(episode.bytes)}` : ""}`,
+          "source-note",
+        ),
+        el("h3", episode.title),
+        el("p", episode.description, "source-description"),
+      );
+      row.append(box, body, queueButton(episode));
+      $("#episodes").append(row);
+    }
+    if (!currentFeed.episodes.length)
+      message(
+        "#episodes",
+        "This feed has no downloadable audio or video enclosures.",
+      );
+    for (const id of ["#episodes-top", "#episodes-bottom"]) {
+      const nav = $(id);
+      nav.replaceChildren();
+      nav.hidden = currentFeed.episodes.length <= 100;
+      if (nav.hidden) continue;
+      const newer = button("View newer", () => changeEpisodePage(-1));
+      newer.disabled = episodePage === 0;
+      const older = button("View older", () => changeEpisodePage(1));
+      older.disabled = (episodePage + 1) * 100 >= currentFeed.episodes.length;
+      const range = el("span", `${episodePage * 100 + 1}–${Math.min((episodePage + 1) * 100, currentFeed.episodes.length)} of ${currentFeed.episodes.length}`, "source-note");
+      range.setAttribute("role", "status");
+      nav.append(newer, range, older);
+    }
+    selectionChanged();
+  }
+  function changeEpisodePage(direction) {
+    episodePage += direction;
+    renderEpisodes();
+    $("#episodes-top").scrollIntoView({ block: "start" });
+    $("#episodes-top button:not(:disabled)")?.focus({ preventScroll: true });
   }
   $("#follow-show").addEventListener("click", async () => {
     try {
@@ -307,10 +336,10 @@ export function initSources({ api, el, size, toast, onQueued }) {
     () => currentFeed && loadFeed(currentFeed.feedUrl, true),
   );
   $("#select-episodes").addEventListener("change", (e) => {
-    selected.clear();
     const boxes = [...$("#episodes").querySelectorAll("input[type=checkbox]")];
     let count = 0;
     for (const box of boxes) {
+      selected.delete(box.dataset.key);
       box.checked = e.target.checked && !box.disabled && count++ < 10;
       if (box.checked) selected.add(box.dataset.key);
     }

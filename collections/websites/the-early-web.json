@@ -2,14 +2,15 @@
   "id": "the-early-web",
   "type": "websites",
   "title": "The early web",
-  "summary": "Landmark home pages as they looked when the web was new, and two that still are.",
+  "summary": "Browsers, search, publishing, commerce, news, and shared knowledge from the web’s beginnings through 2005.",
   "topics": [
     "technology",
     "history"
   ],
   "language": "en",
   "curator": "Obelisk",
-  "updated": "2026-10-15",
+  "updated": "2026-10-21",
+  "parallel": 1,
   "entries": [
     {
       "id": "the-first-website",
@@ -18,16 +19,111 @@
       "dates": [
         "live"
       ],
-      "note": "Tim Berners-Lee’s page about the World Wide Web project, restored by CERN."
+      "note": "CERN’s restored November 1992 edition of the first website, served today."
     },
     {
-      "id": "space-jam",
-      "title": "Space Jam",
-      "url": "https://www.spacejam.com/1996/",
+      "id": "ncsa-mosaic",
+      "title": "NCSA Mosaic",
+      "url": "http://www.ncsa.uiuc.edu/SDG/Software/Mosaic/NCSAMosaicHome.html",
       "dates": [
-        "live"
+        "1996-12-20"
       ],
-      "note": "The 1996 film’s site, left online untouched ever since."
+      "note": "The browser project that helped bring the graphical web to a broad audience."
+    },
+    {
+      "id": "netscape",
+      "title": "Netscape",
+      "url": "http://www.netscape.com/",
+      "dates": [
+        "1996-12-20"
+      ],
+      "note": "A commercial browser and server company during the first browser boom."
+    },
+    {
+      "id": "mozilla",
+      "title": "Mozilla",
+      "url": "http://www.mozilla.org/",
+      "dates": [
+        "1998-12-12",
+        "2004-11-09"
+      ],
+      "note": "An open browser project growing out of Netscape, later releasing Firefox."
+    },
+    {
+      "id": "w3c",
+      "title": "World Wide Web Consortium",
+      "url": "http://www.w3.org/",
+      "dates": [
+        "2000-12-15"
+      ],
+      "note": "Open standards for a web that could work across browsers and institutions."
+    },
+    {
+      "id": "internet-archive",
+      "title": "Internet Archive",
+      "url": "http://www.archive.org/",
+      "dates": [
+        "1997-01-26",
+        "2002-05-27"
+      ],
+      "note": "The web-preservation project in 1997, then public access through the Wayback Machine in 2002."
+    },
+    {
+      "id": "eff",
+      "title": "Electronic Frontier Foundation",
+      "url": "http://www.eff.org/",
+      "dates": [
+        "1996-12-26"
+      ],
+      "note": "Digital civil liberties, free expression, and the struggle over who controls the network."
+    },
+    {
+      "id": "microsoft",
+      "title": "Microsoft",
+      "url": "http://www.microsoft.com/",
+      "dates": [
+        "1996-10-26",
+        "1998-12-05"
+      ],
+      "note": "Windows and Internet Explorer during the competition to control the browser."
+    },
+    {
+      "id": "apple",
+      "title": "Apple",
+      "url": "http://www.apple.com/",
+      "dates": [
+        "1996-12-19",
+        "2001-01-06",
+        "2001-10-24"
+      ],
+      "note": "Apple in late 1996 and early 2001, then its home page just after the first iPod announcement."
+    },
+    {
+      "id": "linux",
+      "title": "Linux Online",
+      "url": "http://www.linux.org/",
+      "dates": [
+        "1997-02-02"
+      ],
+      "note": "The public face of a free operating system built by a distributed developer community."
+    },
+    {
+      "id": "gnu",
+      "title": "GNU Project",
+      "url": "http://www.gnu.org/",
+      "dates": [
+        "1998-01-26"
+      ],
+      "note": "Free software, its licenses, and the tools behind much of the web’s infrastructure."
+    },
+    {
+      "id": "sourceforge",
+      "title": "SourceForge",
+      "url": "http://sourceforge.net/",
+      "dates": [
+        "2000-06-08"
+      ],
+      "note": "Shared hosting and collaboration for open-source software projects."
     },
     {
       "id": "yahoo",
@@ -37,7 +133,34 @@
         "1996-12-20",
         "2000-06-01"
       ],
-      "note": "When the web was small enough to list by hand."
+      "note": "A human-edited web directory becoming a mass-market portal."
+    },
+    {
+      "id": "altavista",
+      "title": "AltaVista",
+      "url": "http://www.altavista.digital.com/",
+      "dates": [
+        "1996-12-20"
+      ],
+      "note": "Full-text search at a scale that helped make the growing web navigable."
+    },
+    {
+      "id": "webcrawler",
+      "title": "WebCrawler",
+      "url": "http://www.webcrawler.com/",
+      "dates": [
+        "1996-12-19"
+      ],
+      "note": "An early service for searching the words within web pages."
+    },
+    {
+      "id": "dmoz",
+      "title": "Open Directory Project",
+      "url": "http://www.dmoz.org/",
+      "dates": [
+        "1999-11-04"
+      ],
+      "note": "Volunteer editors organizing the web into a shared directory."
     },
     {
       "id": "google",
@@ -47,53 +170,315 @@
         "1998-12-02",
         "2005-01-01"
       ],
-      "note": "From a beta search page to the web’s front door."
+      "note": "The beta search page and its later, spare front door to the web."
     },
     {
       "id": "amazon",
       "title": "Amazon.com",
       "url": "http://www.amazon.com/",
       "dates": [
-        "1999-01-25"
+        "2000-11-09"
       ],
-      "note": "Earth’s biggest bookstore, before it sold everything."
-    },
-    {
-      "id": "apple",
-      "title": "Apple",
-      "url": "http://www.apple.com/",
-      "dates": [
-        "1997-01-01",
-        "2001-01-01"
-      ],
-      "note": "Before and after Steve Jobs returned."
-    },
-    {
-      "id": "nasa",
-      "title": "NASA",
-      "url": "http://www.nasa.gov/",
-      "dates": [
-        "1996-12-27"
-      ],
-      "note": "The space agency’s home page in 1996."
+      "note": "The online retailer in 2000, with books, music, toys, electronics, and third-party shops."
     },
     {
       "id": "ebay",
       "title": "eBay",
       "url": "http://www.ebay.com/",
       "dates": [
-        "1999-01-01"
+        "1999-01-17",
+        "2001-01-06"
       ],
-      "note": "The auction site in its first boom."
+      "note": "Person-to-person auctions making an online marketplace out of everyday possessions."
+    },
+    {
+      "id": "craigslist",
+      "title": "craigslist",
+      "url": "http://www.craigslist.org/",
+      "dates": [
+        "1998-12-02",
+        "2003-02-06"
+      ],
+      "note": "Local classifieds in its short-lived ListFoundation era, then a growing network of city pages."
+    },
+    {
+      "id": "pets-com",
+      "title": "Pets.com",
+      "url": "http://www.pets.com/",
+      "dates": [
+        "2000-05-10",
+        "2000-11-10"
+      ],
+      "note": "A heavily promoted dot-com retailer before and during its closure in 2000."
+    },
+    {
+      "id": "etoys",
+      "title": "eToys: closure notice",
+      "url": "http://www.etoys.com/",
+      "dates": [
+        "2001-04-01"
+      ],
+      "note": "The toy retailer’s 2001 closure notice, with its explanation of the failed business."
+    },
+    {
+      "id": "hotwired",
+      "title": "HotWired",
+      "url": "http://www.hotwired.com/",
+      "dates": [
+        "1997-12-12"
+      ],
+      "note": "A publication made for the web, combining technology, design, culture, and advertising."
+    },
+    {
+      "id": "salon",
+      "title": "Salon",
+      "url": "http://www.salonmagazine.com/",
+      "dates": [
+        "1997-04-05"
+      ],
+      "note": "A web-native magazine building an audience for journalism and cultural criticism."
+    },
+    {
+      "id": "suck",
+      "title": "Suck: predictions for 1997",
+      "url": "http://www.suck.com/daily/96/12/26/",
+      "dates": [
+        "1997-06-17"
+      ],
+      "note": "A 1997 capture of Suck’s 26 December 1996 predictions about the web."
+    },
+    {
+      "id": "geocities",
+      "title": "GeoCities",
+      "url": "http://www.geocities.com/",
+      "dates": [
+        "1996-12-19",
+        "1998-12-12"
+      ],
+      "note": "Free personal home pages organized into virtual neighborhoods; this is the service’s front page."
+    },
+    {
+      "id": "well",
+      "title": "The WELL",
+      "url": "http://www.well.com/",
+      "dates": [
+        "1997-01-01"
+      ],
+      "note": "The public entrance to an influential discussion community that began before the web."
+    },
+    {
+      "id": "slashdot",
+      "title": "Slashdot",
+      "url": "http://slashdot.org/",
+      "dates": [
+        "1998-12-06",
+        "2001-01-18"
+      ],
+      "note": "Reader-submitted technology news and sprawling public discussion."
+    },
+    {
+      "id": "blogger",
+      "title": "Blogger",
+      "url": "http://www.blogger.com/",
+      "dates": [
+        "2001-01-19",
+        "2003-02-16"
+      ],
+      "note": "Simple publishing tools helping personal weblogs reach a wider audience."
+    },
+    {
+      "id": "livejournal",
+      "title": "LiveJournal",
+      "url": "http://www.livejournal.com/",
+      "dates": [
+        "2000-06-04"
+      ],
+      "note": "Personal journals connected through friends, comments, and community."
+    },
+    {
+      "id": "metafilter",
+      "title": "MetaFilter",
+      "url": "http://www.metafilter.com/",
+      "dates": [
+        "2000-07-06"
+      ],
+      "note": "A community weblog built around interesting links and conversation."
     },
     {
       "id": "wikipedia",
       "title": "Wikipedia",
       "url": "http://www.wikipedia.com/",
       "dates": [
-        "2001-04-05"
+        "2001-03-31",
+        "2001-12-17"
       ],
-      "note": "The free encyclopedia in its first months."
+      "note": "The encyclopedia’s first year, as volunteers began writing and revising articles together."
+    },
+    {
+      "id": "project-gutenberg",
+      "title": "Project Gutenberg",
+      "url": "http://www.gutenberg.net/",
+      "dates": [
+        "1998-12-02"
+      ],
+      "note": "A volunteer digital library of freely available books, older than the web itself."
+    },
+    {
+      "id": "american-memory",
+      "title": "American Memory",
+      "url": "http://memory.loc.gov/",
+      "dates": [
+        "1998-01-10"
+      ],
+      "note": "The Library of Congress bringing historical documents, photographs, and sound to the web."
+    },
+    {
+      "id": "imdb",
+      "title": "Internet Movie Database",
+      "url": "http://www.imdb.com/",
+      "dates": [
+        "1996-11-19"
+      ],
+      "note": "A collaboratively assembled film reference that grew from an online fan community."
+    },
+    {
+      "id": "exploratorium",
+      "title": "Exploratorium",
+      "url": "http://www.exploratorium.edu/",
+      "dates": [
+        "1997-01-15"
+      ],
+      "note": "A science museum using the web for exhibits and experiments beyond its building."
+    },
+    {
+      "id": "nasa",
+      "title": "NASA",
+      "url": "http://www.nasa.gov/",
+      "dates": [
+        "1997-07-11"
+      ],
+      "note": "NASA’s temporary Pathfinder mirror list, helping readers reach the 1997 Mars landing coverage."
+    },
+    {
+      "id": "mars-pathfinder",
+      "title": "Mars Pathfinder: landing-site guide",
+      "url": "http://mpfwww.jpl.nasa.gov/MPF/landing.html",
+      "dates": [
+        "1999-02-20"
+      ],
+      "note": "A landing-site guide from the Mars Pathfinder mission, shown in a 1999 capture."
+    },
+    {
+      "id": "coffee-pot",
+      "title": "The Trojan Room coffee pot",
+      "url": "http://www.cl.cam.ac.uk/coffee/coffee.html",
+      "dates": [
+        "1997-12-10"
+      ],
+      "note": "The Cambridge webcam’s explanatory page: an everyday coffee pot became a destination on the early web."
+    },
+    {
+      "id": "new-york-times",
+      "title": "The New York Times",
+      "url": "http://www.nytimes.com/",
+      "dates": [
+        "1996-11-21"
+      ],
+      "note": "The newspaper’s public web entrance in 1996; registration and linked articles are outside this saved page."
+    },
+    {
+      "id": "bbc",
+      "title": "BBC News",
+      "url": "http://news.bbc.co.uk/",
+      "dates": [
+        "1998-12-01",
+        "2001-09-12"
+      ],
+      "note": "BBC News in 1998, then its front page on 12 September 2001."
+    },
+    {
+      "id": "cnn",
+      "title": "CNN",
+      "url": "http://www.cnn.com/",
+      "dates": [
+        "2000-08-15",
+        "2001-09-12"
+      ],
+      "note": "CNN’s continuous web news service in 2000, then its front page on 12 September 2001."
+    },
+    {
+      "id": "white-house",
+      "title": "The White House",
+      "url": "http://www.whitehouse.gov/",
+      "dates": [
+        "2001-01-18",
+        "2001-02-02"
+      ],
+      "note": "The Clinton administration’s final home page, then the incoming George W. Bush administration."
+    },
+    {
+      "id": "yahoo-japan",
+      "title": "Yahoo! Japan",
+      "url": "http://www.yahoo.co.jp/",
+      "dates": [
+        "1997-01-01",
+        "2001-01-06"
+      ],
+      "note": "A Japanese-language directory and portal; language shaped how people found their way online."
+    },
+    {
+      "id": "uol",
+      "title": "Universo Online",
+      "url": "http://www.uol.com.br/",
+      "dates": [
+        "1996-12-23"
+      ],
+      "note": "A Portuguese-language portal bringing news, services, and publishing together in Brazil."
+    },
+    {
+      "id": "sina",
+      "title": "Sina",
+      "url": "http://www.sina.com.cn/",
+      "dates": [
+        "2000-08-15"
+      ],
+      "note": "A Chinese-language portal bringing news, search, shopping, and communities together."
+    },
+    {
+      "id": "naver",
+      "title": "Naver",
+      "url": "http://www.naver.com/",
+      "dates": [
+        "2000-06-08"
+      ],
+      "note": "A Korean-language search and portal service in its early years."
+    },
+    {
+      "id": "rediff",
+      "title": "Rediff",
+      "url": "http://www.rediff.com/index.asp",
+      "dates": [
+        "1998-06-10"
+      ],
+      "note": "An Indian news and services portal during the country’s early public-web era."
+    },
+    {
+      "id": "al-jazeera",
+      "title": "Al Jazeera",
+      "url": "http://www.aljazeera.net/",
+      "dates": [
+        "2001-06-02"
+      ],
+      "note": "An Arabic-language news service reaching readers beyond broadcast television."
+    },
+    {
+      "id": "space-jam",
+      "title": "Space Jam",
+      "url": "https://www.spacejam.com/1996/",
+      "dates": [
+        "live"
+      ],
+      "note": "The surviving 1996 film-site edition, hosted at a later address and served today."
     }
   ]
 }

@@ -47,10 +47,11 @@ export async function createSources({ root, catalog, downloads }) {
     },
     search: (query, provider, refresh) => cached(`search:${provider}:${query}`, () => searchPodcasts(query, provider), refresh),
     async feed(url, refresh) {
-      const data = await cached(`feed:${url}`, () => loadPodcast(url), refresh);
+      // Older cache entries were truncated to 200 episodes by the parser.
+      const data = await cached(`feed-v2:${url}`, () => loadPodcast(url), refresh);
       return { ...data, followed: state.followed.some(s => s.feedUrl === data.feedUrl), episodes: data.episodes.map(episode => {
         const plan = podcastPlan(episode, data.rights);
-        return { ...episode, key: register('podcast', `${data.feedUrl}:${episode.guid}`, { episode, rights: data.rights }), saved: Boolean(saved(plan.source)) };
+        return { ...episode, key: token('podcast', `${data.feedUrl}:${episode.guid}`), saved: Boolean(saved(plan.source)) };
       }) };
     },
     async follow(feedUrl) {
@@ -63,6 +64,15 @@ export async function createSources({ root, catalog, downloads }) {
     },
     maps: refresh => cached('maps', () => mapCatalog(), refresh),
     async acquire(key) {
+      // Resolve podcast choices from the bounded feed cache, so a large show cannot
+      // evict its own early episodes from the 2,000-choice directory registry.
+      if (typeof key === 'string' && key.startsWith('podcast:')) {
+        for (const [cacheKey, { data }] of Object.entries(state.cache)) {
+          if (!cacheKey.startsWith('feed-v2:')) continue;
+          const episode = data.episodes.find(e => token('podcast', `${data.feedUrl}:${e.guid}`) === key);
+          if (episode) return downloads.addPlan(podcastPlan(episode, data.rights));
+        }
+      }
       const choice = choices.get(key);
       if (!choice) throw new Error('These results have expired. Refresh the source and select the item again.');
       const plan = choice.kind === 'wikipedia' ? await wikipediaPlan(choice.value) : podcastPlan(choice.value.episode, choice.value.rights);

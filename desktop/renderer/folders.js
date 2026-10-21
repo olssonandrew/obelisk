@@ -210,7 +210,13 @@ export function createFolderUI({ desktop, toast, refresh, getState, openFolder, 
     };
     const count = all.get(folder.id)?.files || 0;
     main.append(twisty, glyph(folder), el("span", folder.name, "folder-name"), el("small", count ? count.toLocaleString() : "", folder.id === inbox() && count ? "badge" : ""));
-    main.onclick = () => openFolder(folder.id);
+    main.onclick = () => {
+      if (kids.length) {
+        expanded.add(folder.id);
+        remember();
+      }
+      openFolder(folder.id);
+    };
     main.ondblclick = () => edit(folder.id);
     const more = el("button", "", "folder-more icon-button");
     more.type = "button";

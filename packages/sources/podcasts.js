@@ -35,7 +35,7 @@ export function parsePodcast(xml, feedUrl) {
     const published = Number.isNaN(date.getTime()) ? null : date.toISOString();
     return [{ id: digest(guid), guid, title: text(item.title) || 'Untitled episode', description: plain(item.description || item.summary || item.content), url,
       bytes: Number(enclosure['@length']) || null, mediaType, published, duration: text(item.duration), showTitle: title, feedId, feedUrl }];
-  }).sort((a,b) => (b.published || '').localeCompare(a.published || '')).slice(0, 200);
+  }).sort((a,b) => (b.published || '').localeCompare(a.published || ''));
   return { id: feedId, title, author: text(channel.author?.name || channel.author), description: plain(channel.description || channel.subtitle), feedUrl, rights: text(channel.copyright || channel.rights) || 'Publisher retains rights; availability in a public RSS feed is not a redistribution license.', episodes };
 }
 export async function loadPodcast(feedUrl, options) {

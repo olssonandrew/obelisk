@@ -1,0 +1,168 @@
+{
+  "id": "podcasts",
+  "type": "podcasts",
+  "title": "Suggested Podcasts",
+  "summary": "History, science, lived experience, music and fiction, chosen for what they preserve about people and their ideas.",
+  "topics": ["culture", "learning"],
+  "language": "en",
+  "curator": "Obelisk",
+  "updated": "2026-10-21",
+  "entries": [
+    {
+      "id": "in-our-time",
+      "title": "In Our Time",
+      "feed": "https://podcasts.files.bbci.co.uk/b006qykl.rss",
+      "note": "Expert discussions of history, science, philosophy and the arts, with decades of conversations in the BBC archive."
+    },
+    {
+      "id": "dwarkesh-podcast",
+      "title": "Dwarkesh Podcast",
+      "feed": "https://api.substack.com/feed/podcast/69345.rss",
+      "note": "Detailed interviews on AI, science and history; a record of how researchers and thinkers see technological change."
+    },
+    {
+      "id": "hardcore-history",
+      "title": "Dan Carlin’s Hardcore History",
+      "feed": "https://feeds.feedburner.com/dancarlin/history?format=xml",
+      "note": "Free selection; older series are sold. Dan Carlin’s long histories of war and power."
+    },
+    {
+      "id": "the-history-of-rome",
+      "title": "The History of Rome",
+      "feed": "https://historyofrome.libsyn.com/rss",
+      "note": "Mike Duncan traces Rome from its legendary origins to the fall of the Western Empire in a completed narrative."
+    },
+    {
+      "id": "philosophy-bites",
+      "title": "Philosophy Bites",
+      "feed": "https://philosophybites.libsyn.com/rss",
+      "note": "Philosophers explain and question one idea at a time, making a compact archive of contemporary philosophical thought."
+    },
+    {
+      "id": "desert-island-discs",
+      "title": "Desert Island Discs",
+      "feed": "https://podcasts.files.bbci.co.uk/b006qnmr.rss",
+      "note": "Guests tell their lives through music: an archive of cultural memory. Music excerpts are shortened in the podcast."
+    },
+    {
+      "id": "99-percent-invisible",
+      "title": "99% Invisible",
+      "feed": "https://feeds.simplecast.com/BqbsxVfO",
+      "note": "The design of buildings, objects and public systems reveals the values and history built into everyday life."
+    },
+    {
+      "id": "radiolab",
+      "title": "Radiolab",
+      "feed": "https://feeds.simplecast.com/EmVW7VGp",
+      "note": "Science, ethics and human experience explored through reporting and inventive sound: a distinctive audio tradition."
+    },
+    {
+      "id": "conversations-with-tyler",
+      "title": "Conversations with Tyler",
+      "feed": "https://cowenconvos.libsyn.com/rss",
+      "note": "Writers, scholars and artists discuss their work in detail, preserving intellectual portraits across disciplines."
+    },
+    {
+      "id": "econtalk",
+      "title": "EconTalk",
+      "feed": "https://feeds.simplecast.com/wgl4xEgL",
+      "note": "Russ Roberts and guests examine economics, institutions and moral choices through extended, questioning conversations."
+    },
+    {
+      "id": "witness-history",
+      "title": "Witness History",
+      "feed": "https://podcasts.files.bbci.co.uk/p004t1hd.rss",
+      "note": "World events remembered by people who were there, with voices from across the globe."
+    },
+    {
+      "id": "a-history-of-the-world-in-100-objects",
+      "title": "A History of the World in 100 Objects",
+      "feed": "https://podcasts.files.bbci.co.uk/b00nrtd2.rss",
+      "note": "Neil MacGregor traces human history through objects in the British Museum, from tools to money and art."
+    },
+    {
+      "id": "revolutions",
+      "title": "Revolutions",
+      "feed": "https://revolutionspodcast.libsyn.com/rss",
+      "note": "History, then Martian fiction: Mike Duncan on revolutions that remake political life."
+    },
+    {
+      "id": "fall-of-civilizations",
+      "title": "Fall of Civilizations",
+      "feed": "https://feeds.soundcloud.com/users/soundcloud:users:572119410/sounds.rss",
+      "note": "Paul Cooper reconstructs societies and their collapse, including the lives of the people who endured it."
+    },
+    {
+      "id": "history-of-philosophy-without-any-gaps",
+      "title": "History of Philosophy Without Any Gaps",
+      "feed": "https://feed.podbean.com/hopwag/feed.xml",
+      "note": "Peter Adamson follows ideas through their historical context, including thinkers often left out of surveys."
+    },
+    {
+      "id": "history-of-indian-and-africana-philosophy",
+      "title": "History of Philosophy: India, Africana, China",
+      "feed": "https://feed.podbean.com/hopwag2/feed.xml",
+      "note": "Indian, Africana and Chinese traditions, explored with scholars of each field; a companion philosophy feed."
+    },
+    {
+      "id": "storycorps",
+      "title": "StoryCorps",
+      "feed": "https://feeds.npr.org/510200/podcast.xml",
+      "note": "Ordinary people interview loved ones about work, family, identity and loss: a record of everyday life."
+    },
+    {
+      "id": "ear-hustle",
+      "title": "Ear Hustle",
+      "feed": "https://feeds.earhustlesq.com/earhustlesq",
+      "note": "Life in prison and after release, told with the people living it; begun inside San Quentin."
+    },
+    {
+      "id": "this-american-life",
+      "title": "This American Life",
+      "feed": "https://www.thisamericanlife.org/podcast/rss.xml",
+      "note": "Recent episodes in RSS. Reported stories of everyday life that helped shape narrative audio."
+    },
+    {
+      "id": "science-friday",
+      "title": "Science Friday",
+      "feed": "https://feeds.simplecast.com/h18ZIZD_",
+      "note": "Scientists explain discoveries and how evidence develops: a long-running record of science in public life."
+    },
+    {
+      "id": "distillations",
+      "title": "Distillations",
+      "feed": "https://feeds.libsyn.com/36404/rss",
+      "note": "The Science History Institute on how science, medicine and technology change society, and who bears the costs."
+    },
+    {
+      "id": "on-being",
+      "title": "On Being with Krista Tippett",
+      "feed": "https://feeds.simplecast.com/AuAxH_Bf",
+      "note": "Conversations about faith, ethics, poetry and meaning across religious and secular traditions."
+    },
+    {
+      "id": "song-exploder",
+      "title": "Song Exploder",
+      "feed": "https://feed.songexploder.net/SongExploder",
+      "note": "Musicians take apart their own songs, preserving first-hand accounts of the choices behind the recordings."
+    },
+    {
+      "id": "the-memory-palace",
+      "title": "The Memory Palace",
+      "feed": "http://feeds.thememorypalace.us/thememorypalace",
+      "note": "Nate DiMeo's short historical portraits recover overlooked lives through carefully crafted audio storytelling."
+    },
+    {
+      "id": "the-new-yorker-fiction",
+      "title": "The New Yorker: Fiction",
+      "feed": "https://feeds.megaphone.fm/CNE2112124476",
+      "note": "Writers read and discuss short stories chosen from the magazine's archive, preserving literature and its craft."
+    },
+    {
+      "id": "welcome-to-night-vale",
+      "title": "Welcome to Night Vale",
+      "feed": "https://feeds.nightvalepresents.com/welcometonightvalepodcast",
+      "note": "Surreal community radio from an imaginary desert town: a distinctive work of serialized podcast fiction."
+    }
+  ]
+}

@@ -301,6 +301,14 @@
   padding: 12px 14px;
   margin: 6px 0;
 }
+.episode-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0;
+  scroll-margin-top: 16px;
+}
 .episode-copy {
   flex: 1;
   min-width: 0;

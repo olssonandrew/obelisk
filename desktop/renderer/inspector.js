@@ -1,7 +1,7 @@
-import { el, size, fileURL, formatOf, shortDate, copyText } from "./bridge.js";
-import { icon } from "./icons.js";
-import { attachThumbnail } from "./thumbnails.js";
-import { needsAttention } from "./library-views.js";
+import {el, size, fileURL, formatOf, shortDate, copyText} from "./bridge.js";
+import {icon} from "./icons.js";
+import {attachThumbnail} from "./thumbnails.js";
+import {needsAttention} from "./library-views.js";
 
 const mac = window.navigator.platform.includes("Mac");
 
@@ -19,7 +19,7 @@ export function createInspector({
 }) {
   let signature = "",
     // Survives the re-render that follows a save.
-    saved = { id: null, until: 0 };
+    saved = {id: null, until: 0};
   const run = (fn) => async () => {
     try {
       await fn();
@@ -54,7 +54,8 @@ export function createInspector({
     b.title = `Copy ${what}`;
     b.setAttribute("aria-label", `Copy ${what}`);
     b.append(icon("copy"));
-    b.onclick = () => toast(copyText(text) ? `Copied ${what}.` : "Could not copy.");
+    b.onclick = () =>
+      toast(copyText(text) ? `Copied ${what}.` : "Could not copy.");
     return b;
   };
 
@@ -155,7 +156,7 @@ export function createInspector({
       try {
         await desktop.updateMetadata(item.id, patch);
         Object.assign(item, patch);
-        saved = { id: item.id, until: Date.now() + 2500 };
+        saved = {id: item.id, until: Date.now() + 2500};
         confirm();
         await refresh();
         return true;
@@ -199,7 +200,7 @@ export function createInspector({
           status.textContent = "";
           return;
         }
-        if (!(await save({ [key]: value }))) control.value = item[key] || "";
+        if (!(await save({[key]: value}))) control.value = item[key] || "";
       };
       control.onkeydown = (event) => {
         if (event.key === "Escape") {
@@ -300,7 +301,7 @@ export function createInspector({
     );
     nodes.push(
       cover,
-      editable("title", "File title", { max: 300, required: true }),
+      editable("title", "File title", {max: 300, required: true}),
       kind,
       rating,
       toolbar,
@@ -327,13 +328,12 @@ export function createInspector({
       nodes.push(note);
     }
 
-
     nodes.push(
       field("description", "Description", {
         name: "File description",
         multiline: true,
         max: 20000,
-        placeholder: "What is this, and why are you keeping it?",
+        placeholder: "",
       }),
     );
     const tagField = el("div", "", "field");
@@ -400,22 +400,39 @@ export function createInspector({
     if (item.source?.capturedAt)
       property(
         properties,
-        item.source.capturedFrom === "wayback" ? "Wayback copy from" : "Page saved",
+        item.source.capturedFrom === "wayback"
+          ? "Wayback copy from"
+          : "Page saved",
         shortDate(item.source.capturedAt),
       );
     nodes.push(section("Properties", properties));
     // The same page or file saved more than once, e.g. a site captured in different years.
-    const key = (value) => String(value || "").replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "").toLowerCase();
+    const key = (value) =>
+      String(value || "")
+        .replace(/^https?:\/\/(www\.)?/, "")
+        .replace(/\/$/, "")
+        .toLowerCase();
     const origin = key(item.source?.url || item.source?.feedUrl);
     const copies = origin
-      ? state.items.filter((other) => other.id !== item.id && key(other.source?.url || other.source?.feedUrl) === origin)
+      ? state.items.filter(
+          (other) =>
+            other.id !== item.id &&
+            key(other.source?.url || other.source?.feedUrl) === origin,
+        )
       : [];
     if (copies.length) {
       const list = el("div", "", "other-copies");
-      for (const other of copies.sort((a, b) => String(a.source?.capturedAt || a.acquiredAt).localeCompare(String(b.source?.capturedAt || b.acquiredAt)))) {
+      for (const other of copies.sort((a, b) =>
+        String(a.source?.capturedAt || a.acquiredAt).localeCompare(
+          String(b.source?.capturedAt || b.acquiredAt),
+        ),
+      )) {
         const b = el("button");
         b.type = "button";
-        b.append(el("span", other.title), el("small", shortDate(other.source?.capturedAt || other.acquiredAt)));
+        b.append(
+          el("span", other.title),
+          el("small", shortDate(other.source?.capturedAt || other.acquiredAt)),
+        );
         b.onclick = () => actions.open(other.id);
         list.append(b);
       }
@@ -444,9 +461,11 @@ export function createInspector({
           [meta.platform, meta.arch].some((v) => !v || v === "unknown")
         ) {
           tested.checked = false;
-          return toast("Choose the system and processor it was tested on first.");
+          return toast(
+            "Choose the system and processor it was tested on first.",
+          );
         }
-        notes({ offlineTested: tested.checked });
+        notes({offlineTested: tested.checked});
       };
       label.append(
         tested,
@@ -466,7 +485,7 @@ export function createInspector({
             ["Linux", "linux"],
           ],
           meta.platform || "unknown",
-          (platform) => notes({ platform, offlineTested: false }),
+          (platform) => notes({platform, offlineTested: false}),
         ),
         choice(
           "Processor",
@@ -477,7 +496,7 @@ export function createInspector({
             ["Universal", "universal"],
           ],
           meta.arch || "unknown",
-          (arch) => notes({ arch, offlineTested: false }),
+          (arch) => notes({arch, offlineTested: false}),
         ),
       ];
       for (const row of rows) row.classList.add("inline");
@@ -485,11 +504,7 @@ export function createInspector({
     }
 
     const preservation = el("dl", "", "file-properties"),
-      badge = el(
-        "span",
-        "",
-        needsAttention(item) ? "badge-warn" : "badge-ok",
-      );
+      badge = el("span", "", needsAttention(item) ? "badge-warn" : "badge-ok");
     badge.append(
       icon(needsAttention(item) ? "alert" : "check"),
       document.createTextNode(
@@ -526,12 +541,13 @@ export function createInspector({
     );
     property(preservation, "Original rights", item.originalMetadata?.rights);
     if (state.lastCheck)
-      property(preservation, "Last check", shortDate(state.lastCheck.checkedAt));
+      property(
+        preservation,
+        "Last check",
+        shortDate(state.lastCheck.checkedAt),
+      );
     nodes.push(section("Preservation", preservation));
-    if (
-      item.accessNote &&
-      !item.media
-    )
+    if (item.accessNote && !item.media)
       nodes.push(el("p", item.accessNote, "muted"));
     return nodes;
   }
@@ -579,7 +595,11 @@ export function createInspector({
   /** Nothing selected: say how the panel works, and for a new archive, where to begin. */
   function overview(state) {
     const box = el("div", "", "inspector-empty");
-    box.append(icon("panel"), el("h2", "No file selected"), el("p", "Select a file to see its details.", "muted"));
+    box.append(
+      icon("panel"),
+      el("h2", "No file selected"),
+      el("p", "Select a file to see its details.", "muted"),
+    );
     const nodes = [box];
     if (state.items.length <= 12) {
       const steps = el("div", "", "overview-bars");
@@ -640,7 +660,7 @@ export function createInspector({
       host.dataset.ids = items.map((i) => i.id).join();
       host.replaceChildren(
         ...(items.length === 1
-          ? single({ ...items[0] }, state)
+          ? single({...items[0]}, state)
           : items.length
             ? many(items)
             : overview(state)),

@@ -58,7 +58,7 @@ See [collections.md](collections.md) for the full behavior.
 | Format | How it opens |
 |---|---|
 | Images, audio, video, text, Markdown | Built in. Markdown and text are sanitized and never run anything. |
-| PDF, EPUB | Bundled readers with page and chapter navigation. EPUB strips publisher CSS and active content. Both are basic; better reading is on the roadmap. |
+| PDF, EPUB | Bundled readers with page and chapter navigation. EPUB strips publisher CSS and active content. EPUB preserves local raster images from SVG cover wrappers without embedding SVG, explains empty sections, and supports EPUB 2/3 chapter labels, internal footnotes and arrow-key chapter navigation. Bookmark anchors leave prose unstyled; chapter images are released when replaced. Search and remembering your place remain on the roadmap. |
 | Wikipedia and other ZIMs | The OpenZIM WebAssembly reader, below. |
 | Maps (PMTiles) | MapLibre, below. |
 | Saved web pages (WACZ) | Isolated replay, below. |
