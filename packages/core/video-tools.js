@@ -14,6 +14,7 @@ import {
 import { createHash, randomUUID } from "node:crypto";
 import { installVideoMerger } from "./video-merger.js";
 import { safeFilename } from "./archive.js";
+import { USER_AGENT } from "./agent.js";
 
 export function videoUrl(value) {
   let url;
@@ -187,7 +188,7 @@ export function createVideoTools(directory) {
         throw new Error("Video tool setup is unavailable for this platform.");
       const get = async (url) => {
         const r = await fetch(url, {
-          headers: { "User-Agent": "Obelisk video tool setup" },
+          headers: { "User-Agent": USER_AGENT },
           signal: AbortSignal.timeout(120000),
         });
         if (!r.ok) throw new Error(`Video tool download failed (${r.status}).`);

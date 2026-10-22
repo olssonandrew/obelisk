@@ -1,5 +1,6 @@
 /** Web pages: saved live, or as the Internet Archive's Wayback Machine recorded them. */
 import { httpUrl } from './http.js';
+import { USER_AGENT } from '../core/agent.js';
 import { safeFilename } from '../core/archive.js';
 
 const WAYBACK = 'https://web.archive.org/web/';
@@ -27,7 +28,6 @@ export const snapshotDate = (timestamp) => {
   const t = String(timestamp).padEnd(14, '0');
   return new Date(`${t.slice(0, 4)}-${t.slice(4, 6) === '00' ? '01' : t.slice(4, 6)}-${t.slice(6, 8) === '00' ? '01' : t.slice(6, 8)}T${t.slice(8, 10)}:${t.slice(10, 12)}:${t.slice(12, 14)}Z`);
 };
-const WAYBACK_AGENT = 'Obelisk (personal offline archive)';
 const pad = (digits, fill) => String(digits).replace(/\D/g, '').slice(0, 14).padEnd(14, fill);
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // The Internet Archive is a shared, donated service that drops clients who ask too
@@ -46,7 +46,7 @@ export async function waybackNear(value, timestamp, { fetchImpl = fetch, probe }
   // `probe` lets the desktop app ask over its browser connection (one shared HTTP/2
   // connection) instead of opening a new one per question, which the Archive refuses.
   probe ||= async (url) => {
-    const response = await fetchImpl(url, { method: 'HEAD', redirect: 'manual', headers: { 'User-Agent': WAYBACK_AGENT }, signal: AbortSignal.timeout(20000) });
+    const response = await fetchImpl(url, { method: 'HEAD', redirect: 'manual', headers: { 'User-Agent': USER_AGENT }, signal: AbortSignal.timeout(20000) });
     return { status: response.status, location: response.headers.get('location') };
   };
   const page = pageUrl(value);

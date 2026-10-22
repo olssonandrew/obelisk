@@ -7,7 +7,8 @@ import { sniff } from '../collections/format.js';
 import { transferError, fromStatus, fromError } from './transfer-errors.js';
 
 // Some servers refuse a request that names no program, or names a bare runtime.
-export const USER_AGENT = 'Obelisk/0.5 (personal offline library)';
+import { USER_AGENT } from './agent.js';
+export { USER_AGENT };
 
 /**
  * Downloads `job.url` to `partial`, resuming when the source supports it. With

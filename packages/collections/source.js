@@ -7,7 +7,7 @@ import { readFile, writeFile, rename, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { readBundle } from "./format.js";
-import { USER_AGENT } from "../core/http-transfer.js";
+import { USER_AGENT } from "../core/agent.js";
 
 const DAY = 24 * 3600 * 1000;
 

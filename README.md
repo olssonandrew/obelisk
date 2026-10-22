@@ -28,9 +28,9 @@ Get the latest version from **[Releases](../../releases/latest)**:
 
 | System                             | Download                                         | First launch                                                                                                        |
 | ---------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| **macOS** (Apple Silicon or Intel) | `Obelisk-mac-arm64.zip` or `Obelisk-mac-x64.zip` | Unzip and move Obelisk to Applications. It isn't signed yet, so the first time, right-click it and choose **Open**. |
+| **macOS** (Apple Silicon or Intel) | `Obelisk-mac-arm64.zip` or `Obelisk-mac-x64.zip` | Unzip and move Obelisk to Applications. It isn't signed by a registered developer yet, so the first time, open it, then choose **Open Anyway** in System Settings → Privacy & Security. |
 | **Windows** (experimental)         | `Obelisk-windows-x64.zip`                        | Unzip and run `Obelisk.exe`. If Windows warns you, choose **More info → Run anyway**.                               |
-| **Linux** (experimental)           | `Obelisk-linux-x64.zip`                          | Unzip and run `obelisk`.                                                                                            |
+| **Linux** (experimental)           | `Obelisk-linux-x64.zip`                          | Unzip and run `Obelisk`. If it won't start, run `sudo chown root chrome-sandbox && sudo chmod 4755 chrome-sandbox` in its folder. |
 
 Obelisk is in beta. It's been tested most on Macs with Apple Silicon. Keep a backup of anything important. You can also [run it from source](#run-from-source).
 
@@ -107,7 +107,7 @@ Some formats need external applications; media playback depends on codecs. Obeli
 
 A key feature of Obelisk is that your archive is a normal folder, not a proprietary container. Original files and readable metadata stay together to browse in your OS file system. Open them with other applications, copy the folder to another drive, or rebuild Obelisk's index from the archive itself. No account or cloud subscription is required.
 
-Checksums and source records help preserve context and detect changes. Integrity checks identify missing, moved, or modified files. Packaged builds also save a copy of the application alongside your content.
+Checksums and source records help preserve context and detect changes. Integrity checks identify missing, moved, or modified files. Packaged builds also save a copy of themselves in your library, so it opens on another computer without internet.
 
 Archives are not encrypted or automatically backed up. Keep a second copy of important files. Synced folders such as iCloud Drive, Dropbox and OneDrive aren't supported; ideally, use a high-capacity external drive. [Library format](docs/library-format.md).
 
@@ -137,9 +137,12 @@ npm run check          # Syntax checks
 npm test               # Core tests
 npm run test:desktop   # Desktop checks
 npm run build          # Bundle assets
-npm run package        # Unsigned platform build
+npm run package        # Build for this computer
+npm run release -- 0.2.0 --push   # Tag a release; CI builds and publishes it
 ```
+
+Releasing is described in [CONTRIBUTING.md](CONTRIBUTING.md#releasing).
 
 ## License
 
-Project-authored code is [MIT licensed](LICENSE). Builds containing the integrated OpenZIM reader must be distributed under **GPL-3.0-or-later**. Third-party software and archived content retain their respective licenses. [Licensing details](docs/third-party.md).
+Project-authored code is [MIT licensed](LICENSE). Release builds include the OpenZIM Wikipedia reader, so they're distributed under **GPL-3.0-or-later**, with their complete source attached to each release. Third-party software and archived content retain their respective licenses. [Licensing details](docs/third-party.md).

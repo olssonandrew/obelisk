@@ -19,7 +19,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { sourceDate, fileDate } from "./dates.js";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
 import { openCatalog, syncCatalog } from "./catalog.js";
 import { importFile, fileTarget } from "./archive.js";
@@ -65,27 +65,20 @@ export async function upgradeLegacyLibrary(archiveRoot) {
 }
 
 /**
- * What a file, or a package folder macOS shows as one file, is right now: its size and
- * latest change, counted through every file inside. Any edit changes it.
+ * What a file, or a package folder macOS shows as one file, is right now: the name,
+ * size and change times of everything in it. Any edit changes it, even one that keeps
+ * the size and a timestamp someone set by hand (the system sets ctime on every change).
  */
 async function fingerprint(target) {
-  const info = await lstat(target);
-  if (!info.isDirectory()) return `${info.size}:${info.mtimeMs}`;
-  let count = 0,
-    bytes = 0,
-    latest = info.mtimeMs;
-  async function walk(dir) {
-    for (const child of await readdir(dir, { withFileTypes: true })) {
-      const full = path.join(dir, child.name),
-        stats = await lstat(full);
-      count++;
-      latest = Math.max(latest, stats.mtimeMs);
-      if (stats.isDirectory()) await walk(full);
-      else bytes += stats.size;
-    }
+  const entries = [];
+  async function walk(file, name) {
+    const stats = await lstat(file);
+    entries.push(`${name}:${stats.size}:${stats.mtimeMs}:${stats.ctimeMs}`);
+    if (stats.isDirectory())
+      for (const child of (await readdir(file)).sort()) await walk(path.join(file, child), `${name}/${child}`);
   }
-  await walk(target);
-  return `${count}:${bytes}:${latest}`;
+  await walk(target, "");
+  return createHash("sha256").update(entries.join("\n")).digest("hex");
 }
 
 /** One open archive. Desktop integration lives outside this service. */

@@ -20,6 +20,7 @@ import { setDefaultAutoSelectFamilyAttemptTimeout } from "node:net";
 import { seed } from "../scripts/seed.js";
 import { openLibrary, upgradeLegacyLibrary } from "../packages/core/library.js";
 import { inside, fileResponse } from "./files.js";
+import { USER_AGENT } from "../packages/core/agent.js";
 import {
   shelfOf,
   shelfExtensions,
@@ -99,9 +100,13 @@ let window,
   switching = false;
 let appCopyPromise;
 let appCopyError = null;
+/**
+ * Saves this app into the open library, once per version and system, in the background.
+ * The demo lives in the app's own data, so it gets none.
+ */
 async function ensureAppCopy() {
   appCopyError = null;
-  if (!app.isPackaged) return;
+  if (!app.isPackaged || library.archiveRoot === demoArchive) return;
   const saved = library
     .state()
     .items.find(
@@ -119,12 +124,17 @@ async function ensureAppCopy() {
         return;
     } catch {}
   }
+  // Once nothing else is changing the library, which may be switched meanwhile.
+  const target = library;
+  while (target.busy()) await new Promise((resolve) => setTimeout(resolve, 2000));
+  if (library !== target || closing) return;
   try {
     appCopyPromise = saveAppCopy(app, library, project);
     await appCopyPromise;
   } catch (e) {
     appCopyError = e.message;
   }
+  announce();
 }
 let videoFullscreen = false,
   previousFullscreen = false;
@@ -187,9 +197,11 @@ async function useArchive(chosen) {
     }
     zimReader.close();
     webArchive.closeInline();
+    // A copy still being saved into the old library finishes first.
+    await Promise.resolve(appCopyPromise).catch(() => {});
     await library.close();
     library = next;
-    await ensureAppCopy();
+    void ensureAppCopy();
     return library.state();
   } finally {
     switching = false;
@@ -470,6 +482,7 @@ function wireIPC() {
     if (switching) throw new Error("An operation is in progress.");
     switching = true;
     try {
+      await Promise.resolve(appCopyPromise).catch(() => {});
       appCopyPromise = saveAppCopy(app, library, project);
       return await appCopyPromise;
     } finally {
@@ -820,8 +833,7 @@ else {
       session.defaultSession.webRequest.onBeforeSendHeaders(
         { urls: ["https://tile.openstreetmap.org/*"] },
         (details, callback) => {
-          details.requestHeaders["User-Agent"] =
-            `Obelisk/${app.getVersion()} (desktop archive manager; map preview)`;
+          details.requestHeaders["User-Agent"] = USER_AGENT;
           callback({ requestHeaders: details.requestHeaders });
         },
       );
@@ -890,8 +902,8 @@ else {
           },
         ]),
       );
-      await ensureAppCopy();
       await createWindow();
+      void ensureAppCopy();
       app.on("activate", () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
       });

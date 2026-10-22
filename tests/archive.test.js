@@ -6,6 +6,7 @@ import path from 'node:path';
 import { openCatalog, rebuildCatalog } from '../packages/core/catalog.js';
 import { importFile, safeFilename } from '../packages/core/archive.js';
 import { directSource } from '../packages/sources/direct.js';
+import { writeArchiveGuide } from '../packages/core/archive-guide.js';
 import { classify } from '../packages/types/index.js';
 
 test('cross-platform names cannot escape the archive or use Windows device names', () => {
@@ -59,4 +60,14 @@ test('imports retain provenance, keep identical files as separate items, rebuild
       assert.equal(await readFile(path.join(moved, result.item.path), 'utf8'), 'A portable library.');
     } finally { rebuilt.close(); }
   } finally { catalog.close(); await rm(root, { recursive: true, force: true }); }
+});
+
+test('a new library says where to find the app for opening it on another computer', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'obelisk-guide-'));
+  try {
+    await writeArchiveGuide(root);
+    const guide = await readFile(path.join(root, 'ABOUT THIS ARCHIVE.txt'), 'utf8');
+    assert.match(guide, /OPENING THIS ARCHIVE ON ANOTHER COMPUTER\nObelisk keeps a copy of itself in Software\//);
+    assert.match(guide, /without internet/);
+  } finally { await rm(root, { recursive: true, force: true }); }
 });

@@ -2,12 +2,13 @@ import path from "node:path";
 import { mkdir, writeFile, rename, chmod, rm } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import JSZip from "jszip";
+import { USER_AGENT } from "./agent.js";
 
 /** Install tools from their publishers into user data, outside the app bundle. */
 export async function installVideoMerger(directory) {
   const get = async (url) => {
     const response = await fetch(url, {
-      headers: { "User-Agent": "Obelisk video tool setup" },
+      headers: { "User-Agent": USER_AGENT },
       signal: AbortSignal.timeout(180000),
     });
     if (!response.ok)

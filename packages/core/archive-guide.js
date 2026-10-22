@@ -35,6 +35,12 @@ Read Wikipedia ZIM files inside Obelisk. An alternative reader is Kiwix: https:/
 A ZIM is content, not an application. Save a suitable Kiwix installer in
 Software/ before going offline. An installer still needs to be installed;
 readers and AI runtimes must match the target computer's operating system.
+
+OPENING THIS ARCHIVE ON ANOTHER COMPUTER
+Obelisk keeps a copy of itself in Software/, in a folder named for its version
+and the kind of computer that saved it. It works without internet. Unzip it and
+open Obelisk, then open this folder. On a Mac, the first time, choose Open
+Anyway in System Settings > Privacy & Security.
 `;
   try {
     await writeFile(path.join(root, "ABOUT THIS ARCHIVE.txt"), text, {

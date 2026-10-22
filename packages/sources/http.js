@@ -1,3 +1,4 @@
+import { USER_AGENT } from '../core/agent.js';
 /** Small, bounded catalog requests. Large content transfers use the download core. */
 export function httpUrl(value, base) {
   const url = new URL(value, base);
@@ -5,7 +6,7 @@ export function httpUrl(value, base) {
   return url.href;
 }
 export async function fetchText(url, { headers = {}, maxBytes = 8 * 1024 ** 2, fetchImpl = fetch } = {}) {
-  const response = await fetchImpl(httpUrl(url), { headers: { 'User-Agent': 'Obelisk/0.2 (personal offline archive)', ...headers }, signal: AbortSignal.timeout(25000) });
+  const response = await fetchImpl(httpUrl(url), { headers: { 'User-Agent': USER_AGENT, ...headers }, signal: AbortSignal.timeout(25000) });
   if (!response.ok) throw new Error(`Source returned HTTP ${response.status}. Please try again later.`);
   const chunks = []; let bytes = 0;
   for await (const chunk of response.body) {

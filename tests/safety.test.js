@@ -1,10 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, rename, chmod, access } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, rename, chmod, access, symlink, utimes } from "node:fs/promises";
 import { writeFileSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { openLibrary } from "../packages/core/library.js";
+import { importFile } from "../packages/core/archive.js";
 
 const exists = (file) => access(file).then(() => true, () => false);
 const named = (library, name) => library.state().folders.find((f) => f.name === name);
@@ -186,6 +187,103 @@ test("a removed item whose manifest was apart from its file stays removed", asyn
     await rm(path.join(archive, ".obelisk", "catalog.sqlite"), { force: true });
     library = await openLibrary(archive);
     assert.ok(!library.catalog.get(item.id));
+    await library.close();
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a folder replaced by a link elsewhere is never written through", async () => {
+  await withLibrary(async (library, root) => {
+    const trip = await library.folders.create(named(library, "Documents").id, "Trip");
+    const outside = path.join(root, "outside");
+    await mkdir(outside);
+    await rename(path.join(library.archiveRoot, trip.dir), path.join(root, "Trip, moved away"));
+    await symlink(outside, path.join(library.archiveRoot, trip.dir));
+    const file = path.join(root, "note.txt");
+    await writeFile(file, "hello");
+    const [result] = await library.importEntries((await library.previewPaths([file])).map((f) => ({ ...f, folderId: trip.id })));
+    assert.match(result.error, /outside the library/);
+    const item = await add(library, root, "kept.txt");
+    await assert.rejects(library.moveItems([item.id], trip.id), /outside the library/);
+    await assert.rejects(library.folders.create(trip.id, "Deeper"), /outside the library/);
+    await assert.rejects(library.folders.rename(trip.id, "Trip 2"));
+    assert.deepEqual(await readdir(outside), []);
+    assert.ok(await exists(path.join(library.archiveRoot, item.path)), "the moved file stays where it was");
+  });
+});
+
+test("a package edited during its import is kept, even keeping its size beside a future timestamp", async () => {
+  await withLibrary(async (library) => {
+    const pkg = path.join(library.archiveRoot, "Documents", "Report.pages");
+    await mkdir(pkg);
+    await writeFile(path.join(pkg, "a.xml"), "aaaa");
+    await writeFile(path.join(pkg, "b.xml"), "bbbb");
+    const future = new Date(Date.now() + 86400000);
+    await utimes(path.join(pkg, "a.xml"), future, future);
+    const listed = await library.previewPaths([pkg]);
+    assert.ok(listed[0].bundle, "a package is listed as one file");
+    const put = library.catalog.put.bind(library.catalog);
+    let edited = false;
+    library.catalog.put = (item) => {
+      // Saved by its app between the copy and the clean-up, the same length as before.
+      if (!edited) writeFileSync(path.join(pkg, "b.xml"), "EDIT");
+      edited = true;
+      return put(item);
+    };
+    await library.importEntries(listed.map((e) => ({ ...e, inPlace: true })));
+    library.catalog.put = put;
+    assert.equal(await readFile(path.join(pkg, "b.xml"), "utf8"), "EDIT");
+  });
+});
+
+test("an import whose manifest can't be written saves nothing and gives the file back", async () => {
+  await withLibrary(async (library, root) => {
+    const id = "1b4e28ba-2fa1-41d2-883f-0016d3cca427",
+      temporaryPath = path.join(root, "incoming.tmp");
+    await writeFile(temporaryPath, "hello");
+    // The short name is taken, so the item gets the long one, where item.json can't go:
+    // writing it fails as a full disk would.
+    await mkdir(path.join(library.archiveRoot, "Documents", `note--${id.slice(0, 8)}`));
+    const blocked = path.join(library.archiveRoot, "Documents", `note--${id}`);
+    await mkdir(path.join(blocked, "item.json"), { recursive: true });
+    await writeFile(path.join(blocked, "item.json", "x"), "");
+    await assert.rejects(
+      importFile({ catalog: library.catalog, archiveRoot: library.archiveRoot, temporaryPath, filename: "note.txt", title: "note", id, directory: "Documents" }),
+    );
+    assert.equal(await readFile(temporaryPath, "utf8"), "hello");
+    assert.deepEqual((await readdir(blocked)).sort(), ["item.json"], "no file or half-written manifest left behind");
+    assert.equal(library.catalog.get(id), null);
+  });
+});
+
+test("a recovery step whose destination is taken stays unfinished, and the index stays with the files", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "obelisk-safety-"));
+  try {
+    const archive = path.join(root, "lib");
+    let library = await openLibrary(archive);
+    const a = await library.folders.create(named(library, "Documents").id, "A");
+    const item = await add(library, root, "note.txt", "hello", a.id);
+    await library.close();
+    const journal = path.join(archive, ".obelisk", "journal.json");
+    await mkdir(path.join(archive, "Documents", "B"));
+    await writeFile(journal, JSON.stringify({ schemaVersion: 1, steps: [{ from: "Documents/A", to: "Documents/B" }] }));
+    library = await openLibrary(archive);
+    assert.equal(library.catalog.get(item.id).path, item.path);
+    assert.ok(await exists(path.join(archive, item.path)));
+    assert.ok(await exists(journal), "the unfinished move stays written down");
+    // Other moves wait for it, rather than writing over its plan.
+    const other = await library.folders.create(named(library, "Documents").id, "Other");
+    await assert.rejects(library.folders.rename(other.id, "Renamed"), /“Documents\/B” is in the way/);
+    assert.ok(await exists(journal), "still written down after another move was tried");
+    await library.close();
+    // Once the destination is free, the move is finished on the next opening.
+    await rm(path.join(archive, "Documents", "B"), { recursive: true });
+    library = await openLibrary(archive);
+    const moved = library.catalog.get(item.id).path;
+    assert.ok(moved.startsWith("Documents/B/"), moved);
+    assert.ok(await exists(path.join(archive, moved)));
+    assert.ok(!(await exists(journal)));
     await library.close();
   } finally {
     await rm(root, { recursive: true, force: true });

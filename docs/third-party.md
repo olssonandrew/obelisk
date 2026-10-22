@@ -7,11 +7,15 @@ OpenZIM javascript-libzim v0.95, is **GPL-3.0-or-later**, so any build that incl
 must be distributed under GPL-3.0-or-later. Each component keeps its own license. This
 allows selling the open-source app; it doesn't allow a closed-source build.
 
-Before publishing binaries, provide the complete corresponding source for the exact
-WASM build and its dependencies, build scripts included. A link to the upstream
-project isn't enough on its own. The GPL text, engine URLs, checksums and upstream
-source are in `desktop/zim/vendor/` (`LICENSE-GPL-3.0.txt`, `SOURCE.json`). Never
-replace the runtime without updating its checksums and source record.
+Each release publishes its complete corresponding source beside the builds as
+`Obelisk-<version>-source.tar`, made by `scripts/gpl-source.js`: Obelisk at the
+released commit, the javascript-libzim source with the Makefile that builds the WASM,
+and the source of every library that Makefile downloads (libzim, Xapian, ICU, zstd,
+zlib, xz). A link to the upstream project isn't enough on its own, so the archives are
+copied, not linked. The GPL text, engine checksums and the pinned source archives are
+in `desktop/zim/vendor/` (`LICENSE-GPL-3.0.txt`, `SOURCE.json`). Never replace the
+runtime without updating its checksums and source record, including
+`correspondingSource`.
 
 ## Bundled
 

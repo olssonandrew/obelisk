@@ -85,6 +85,10 @@ Also in `.obelisk/`:
 
 ## item.json
 
+An import writes the file, then its `item.json` (through a temporary file), then the
+catalog. If the manifest can't be written, the file goes back and nothing is saved; a
+file left without one after a crash shows up in Check archive, ready to add again.
+
 Every manifest has:
 - `schemaVersion: 1`, a stable `id`, `title`, `description`, `filename`, `path`
 - `bytes`, `sha256`, `acquiredAt`

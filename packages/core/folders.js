@@ -2,10 +2,10 @@
 // holding its ID, display name and icon. Item folders (a file and its item.json)
 // sit inside them. See docs/folders.md.
 import { randomUUID } from "node:crypto";
-import { mkdir, readdir, readFile, rename, rm, rmdir, lstat, access, realpath } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename, rm, rmdir, lstat, access } from "node:fs/promises";
 import path from "node:path";
 import { packageOf } from "./bundle.js";
-import { writeJson } from "./archive.js";
+import { writeJson, insideLibrary, OUTSIDE } from "./archive.js";
 
 export const FOLDER_FILE = "folder.json";
 const ITEM_FILE = "item.json";
@@ -97,7 +97,10 @@ export async function openFolders({ archiveRoot, catalog, fresh = false }) {
       ...(Number.isInteger(position) ? { position } : {}),
     };
   };
-  const save = (folder) => writeJson(path.join(abs(folder.dir), FOLDER_FILE), record(folder));
+  const save = async (folder) => {
+    if (!(await contained(join(folder.dir, FOLDER_FILE)))) throw new Error(OUTSIDE);
+    return writeJson(path.join(abs(folder.dir), FOLDER_FILE), record(folder));
+  };
   const saveSettings = () => writeJson(settingsFile, settings);
 
   /** Reads every folder under the root. Directories without folder.json are adopted. */
@@ -157,11 +160,10 @@ export async function openFolders({ archiveRoot, catalog, fresh = false }) {
   async function contained(rel) {
     if (typeof rel !== "string" || !rel || path.isAbsolute(rel) || rel.split(/[\\/]/).some((p) => p === ".." || p === ""))
       return false;
-    let dir = path.dirname(abs(rel));
-    while (!(await exists(dir))) dir = path.dirname(dir);
-    const [root, real] = await Promise.all([realpath(archiveRoot), realpath(dir)]);
-    return real === root || real.startsWith(root + path.sep);
+    return insideLibrary(archiveRoot, abs(rel));
   }
+  // Why the last recovery couldn't finish, said to whoever tries the next operation.
+  let unfinished = "";
   /** Finishes a multi-step operation that a crash or an error interrupted. */
   async function recover() {
     let plan;
@@ -175,13 +177,20 @@ export async function openFolders({ archiveRoot, catalog, fresh = false }) {
       if (!(await contained(step.from)) || !(await contained(step.to))) continue;
       const from = abs(step.from),
         to = abs(step.to);
-      if ((await exists(from)) && !(await exists(to))) {
+      // Both there means something else took the destination, so this move never
+      // happened. It stays written down, unfinished, and the index stays with the files.
+      if ((await exists(from)) && (await exists(to))) {
+        unfinished = `“${step.to}” is in the way of an earlier move from “${step.from}”. Move or rename it, then try again.`;
+        return false;
+      }
+      if (await exists(from)) {
         try {
           await mkdir(path.dirname(to), { recursive: true });
           await rename(from, to);
         } catch {
           // The plan stays written down, and the next opening tries again. Later steps
           // wait: they may depend on this one.
+          unfinished = `An earlier move from “${step.from}” to “${step.to}” couldn’t finish. Try again, or reopen the library.`;
           return false;
         }
       }
@@ -198,6 +207,12 @@ export async function openFolders({ archiveRoot, catalog, fresh = false }) {
    */
   async function run(steps, after = async () => {}) {
     if (!steps.length) return after();
+    // There's one plan at a time: an earlier one is finished first, and while it can't
+    // be, nothing is written over it.
+    if ((await recover()) === false) throw new Error(unfinished);
+    // A folder since replaced by a link to somewhere else is never followed.
+    for (const step of steps)
+      if (!(await contained(step.from)) || !(await contained(step.to))) throw new Error(OUTSIDE);
     await writeJson(journalFile, { schemaVersion: 1, steps });
     const done = [],
       made = [];
@@ -293,6 +308,7 @@ export async function openFolders({ archiveRoot, catalog, fresh = false }) {
     if (parentDir === null) throw new Error("This folder no longer exists.");
     const display = cleanName(name),
       dir = join(parentDir, await freeName(parentDir, display));
+    if (!(await contained(dir))) throw new Error(OUTSIDE);
     await mkdir(abs(dir));
     const folder = { id: randomUUID(), name: display, icon: cleanIcon(icon), source, parent: parentId || null, dir };
     await save(folder);

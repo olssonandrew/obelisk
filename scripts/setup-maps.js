@@ -8,7 +8,8 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const platform = { darwin: 'Darwin', linux: 'Linux', win32: 'Windows' }[process.platform];
 const arch = { arm64: 'arm64', x64: 'x86_64' }[process.arch];
 if (!platform || !arch) throw new Error('This OS/CPU combination needs a manually installed PMTiles binary. Set PMTILES_PATH.');
-const response = await fetch('https://api.github.com/repos/protomaps/go-pmtiles/releases/tags/v1.31.2', { signal: AbortSignal.timeout(30000) });
+// CI shares its address with many others; its token keeps GitHub's API from refusing.
+const response = await fetch('https://api.github.com/repos/protomaps/go-pmtiles/releases/tags/v1.31.2', { headers: process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}, signal: AbortSignal.timeout(30000) });
 if (!response.ok) throw new Error(`Could not read release metadata: HTTP ${response.status}`);
 const release = await response.json();
 const asset = release.assets.find(a => a.name.includes(`${platform}_${arch}.`));

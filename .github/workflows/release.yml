@@ -1,0 +1,94 @@
+name: Release
+# Pushing a version tag (npm run release -- 0.2.0 --push) builds Obelisk for every
+# system, opens each build on its own runner, gathers the GPL source, and publishes
+# them as a GitHub release with the tag's CHANGELOG.md notes.
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: node scripts/release.js --verify "$GITHUB_REF_NAME"
+      - run: npm run check
+      - run: npm run collections -- --verify
+      - run: npm test
+
+  build:
+    needs: verify
+    strategy:
+      matrix:
+        include:
+          - os: macos-15 # Apple Silicon
+          - os: macos-15-intel
+          - os: windows-latest
+          - os: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: npm run setup:maps
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: npm run package -- --zip
+      - if: runner.os == 'Linux'
+        run: xvfb-run -a node scripts/launch-check.js
+      - if: runner.os != 'Linux'
+        run: node scripts/launch-check.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.os }}
+          path: dist/Obelisk-*.zip
+          if-no-files-found: error
+
+  source:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: node scripts/gpl-source.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source
+          path: dist/Obelisk-*-source.tar
+          if-no-files-found: error
+
+  publish:
+    needs: [build, source]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          node scripts/release.js --notes "$version" > notes.md
+          # A version like 0.2.0-beta.1 is a pre-release; the README's download button
+          # follows the latest full release.
+          prerelease=()
+          [[ "$version" == *-* ]] && prerelease=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" assets/* --title "Obelisk $version" --notes-file notes.md --verify-tag "${prerelease[@]}"

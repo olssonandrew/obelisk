@@ -14,6 +14,8 @@ node --test --test-name-pattern="rename" tests/folders.test.js   # one test
 npm run check                                 # every script parses
 npm run test:desktop                          # launches the real app; run after UI changes
 npm run collections                           # after editing collections/; rebuilds collections.json
+npm run package                               # build for this computer into dist/
+npm run release -- 0.2.0 --push               # release: needs a CHANGELOG.md section; CI does the rest
 ```
 
 ## Rules
@@ -57,6 +59,13 @@ npm run collections                           # after editing collections/; rebu
   credentials.
 - **New dependencies** need a clear reason; most things already have a helper in
   `packages/core`.
+
+## Releasing
+
+Add the version's section to `CHANGELOG.md`, merge to `main`, then
+`npm run release -- <version> --push`. The tag starts `.github/workflows/release.yml`,
+which builds, launches and publishes every platform with the GPL source. Never upload
+builds by hand. A failed release is fixed with a new patch version, not by moving a tag.
 
 ## Done means
 

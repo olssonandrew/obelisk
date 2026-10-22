@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { transferError } from "./transfer-errors.js";
 import { createReadStream, createWriteStream } from "node:fs";
-import { mkdir, rename, writeFile, stat, rm } from "node:fs/promises";
+import { mkdir, rename, writeFile, stat, rm, rmdir, realpath } from "node:fs/promises";
 import { sourceDate, fileDate } from "./dates.js";
 import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -37,6 +37,28 @@ export async function writeJson(file, value) {
     await rm(temporary, { force: true });
   }
 }
+/**
+ * Whether the folder `target` would be written in is inside `root`, symlinks included.
+ * `target` need not exist yet: its nearest existing folder is what's checked.
+ */
+export async function insideLibrary(root, target) {
+  const [base, dir] = await Promise.all([resolved(root), resolved(path.dirname(target))]);
+  return dir === base || dir.startsWith(base + path.sep);
+}
+/** Where `file` really is: its nearest existing folder with links followed, then the rest. */
+async function resolved(file) {
+  let at = path.resolve(file);
+  const rest = [];
+  for (;;)
+    try {
+      return path.join(await realpath(at), ...rest);
+    } catch (error) {
+      if (error.code !== "ENOENT" || at === path.dirname(at)) throw error;
+      rest.unshift(path.basename(at));
+      at = path.dirname(at);
+    }
+}
+export const OUTSIDE = "This folder now leads outside the library, so nothing was saved there.";
 export async function hashFile(file) {
   const hash = createHash("sha256");
   for await (const chunk of createReadStream(file)) hash.update(chunk);
@@ -144,7 +166,9 @@ async function commitImport({
     relativeDirectory = `${parent ? parent + "/" : ""}${readableName}--${safeId}`;
   } catch {}
   const itemDirectory = path.join(archiveRoot, relativeDirectory);
-  await mkdir(itemDirectory, { recursive: true });
+  // A folder since replaced by a link to somewhere else is never followed.
+  if (!(await insideLibrary(archiveRoot, path.join(itemDirectory, filename)))) throw new Error(OUTSIDE);
+  const made = await mkdir(itemDirectory, { recursive: true });
   const item = {
     schemaVersion: 1,
     id,
@@ -176,12 +200,21 @@ async function commitImport({
     demo,
     ...(collection ? { collection } : {}),
   };
-  // Files and the manifest are committed before the rebuildable catalog.
-  await rename(temporaryPath, path.join(itemDirectory, filename));
-  await writeFile(
-    path.join(itemDirectory, "item.json"),
-    JSON.stringify(item, null, 2) + "\n",
-  );
+  // Files and the manifest are committed before the rebuildable catalog. Without its
+  // manifest (a full disk) the file goes back, and the import fails having saved
+  // nothing. If even that fails, the file stays, and Check archive finds it.
+  const saved = path.join(itemDirectory, filename);
+  await rename(temporaryPath, saved);
+  try {
+    await writeJson(path.join(itemDirectory, "item.json"), item);
+  } catch (error) {
+    await rename(saved, temporaryPath);
+    // Folders made for it would otherwise be read as new, empty folders.
+    if (made)
+      for (let dir = itemDirectory; dir.length >= made.length; dir = path.dirname(dir))
+        await rmdir(dir).catch(() => {});
+    throw error;
+  }
   catalog.put(item);
   return { item, duplicate: false };
 }

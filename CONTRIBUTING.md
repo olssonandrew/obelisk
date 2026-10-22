@@ -39,6 +39,28 @@ point tests at real services.
 - Full-size Wikipedia, split ZIM files and dynamic Zimit replay.
 - Protected EPUBs, and PDF text search and forms.
 
+## Releasing
+
+1. Add a `## <version>` section to [CHANGELOG.md](CHANGELOG.md); it becomes the
+   release notes. Merge to `main`.
+2. Run `npm run release -- <version> --push` on a clean, up-to-date `main`. It sets
+   the version, commits `Release v<version>`, tags it and pushes.
+3. The [Release workflow](.github/workflows/release.yml) checks the tag against
+   `package.json` and the changelog, runs the tests, builds on macOS (Apple Silicon and
+   Intel), Windows and Linux, opens each build (`scripts/launch-check.js`), gathers the
+   GPL source (`scripts/gpl-source.js`), and publishes the release.
+
+A version with a hyphen (`0.2.0-beta.1`) is published as a pre-release, which the
+README's download button skips. If a release fails partway, fix it and release the
+next patch version; don't move a published tag.
+
+`npm run package -- --zip` and `scripts/gpl-source.js` refuse uncommitted changes, so
+a download and its published source are always the same commit.
+
+Mac builds are ad-hoc signed by `npm run package`, so a downloaded copy opens with
+**Open Anyway** rather than being called damaged. Signing with a Developer ID and
+notarizing needs an Apple Developer account.
+
 ## Screenshots
 
 The README images in `docs/images/` are 1440 × 960, captured by `npm run screenshots`

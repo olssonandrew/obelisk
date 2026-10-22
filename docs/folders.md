@@ -52,9 +52,13 @@ folder is gone, and item folders found at the root.
   half-moved.
 - **A crash, or an undo that also fails:** the plan is finished the next time the
   library opens.
-- **Recovery can't finish a step:** the plan is kept, and tried again on the next
-  opening.
-- **Journal paths** must stay inside the library, symlinks included.
+- **Recovery can't finish a step,** or something else has taken its destination: the
+  plan is kept, the catalog stays with the files, and it's tried again on the next
+  opening. There's one plan at a time, so moves and renames are refused, saying
+  what's in the way, until it finishes.
+- **Every path** must stay inside the library, symlinks included: journal steps,
+  moves, new folders, `folder.json` and imports. A folder replaced by a link to
+  somewhere else is refused, not followed.
 
 **Moving a single file.** A file that shares its folder with other things, or sits
 apart from its manifest, moves on its own into a new item folder with its manifest.
