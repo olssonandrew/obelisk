@@ -5,6 +5,8 @@ permissions:
 jobs:
   test:
     strategy:
+      # Every system finishes, so one run shows all that fails.
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         node: [22, 24]

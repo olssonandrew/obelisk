@@ -260,8 +260,9 @@ test("files that have been checked keep working after their folder moves", async
     await library.updateMetadata(imported.item.id, { title: "Renamed song" });
     await library.close();
     // A rebuilt catalog finds the file where it is now.
-    // Windows may still hold a just-closed file for a moment (antivirus, indexing).
-    await rm(path.join(archive, ".obelisk", "catalog.sqlite"), { force: true, maxRetries: 10 });
+    // Windows may still hold a just-closed file for a moment (antivirus, indexing). Node
+    // retries only with `recursive`, which also removes a single file.
+    await rm(path.join(archive, ".obelisk", "catalog.sqlite"), { force: true, recursive: true, maxRetries: 10 });
     library = await openLibrary(archive);
     const item = library.catalog.get(imported.item.id);
     assert.ok(item.path.startsWith("Audio/Music/Album (renamed)/"));
