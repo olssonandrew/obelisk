@@ -176,9 +176,7 @@ test("a removed item whose manifest was apart from its file stays removed", asyn
     assert.ok(library.catalog.get(item.id).manifestPath);
     await library.removeItems([item.id], trashIn(path.join(root, "bin")));
     await library.close();
-    // Windows may still hold a just-closed file for a moment (antivirus, indexing). Node
-    // retries only with `recursive`, which also removes a single file.
-    await rm(path.join(archive, ".obelisk", "catalog.sqlite"), { force: true, recursive: true, maxRetries: 10 });
+    await rm(path.join(archive, ".obelisk", "catalog.sqlite"), { force: true });
     library = await openLibrary(archive);
     assert.ok(!library.catalog.get(item.id));
     await library.close();

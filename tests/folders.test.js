@@ -244,31 +244,33 @@ test("a library made before the rename opens with its state and folders intact",
 
 test("files that have been checked keep working after their folder moves", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "obelisk-checked-"));
+  let library;
   try {
     const archive = path.join(root, "lib");
-    let library = await openLibrary(archive);
+    library = await openLibrary(archive);
     const album = await library.folders.create(named(library, "Music").id, "Album");
     const song = path.join(root, "song.mp3");
     await writeFile(song, "audio");
     const [imported] = await library.importEntries((await library.previewPaths([song])).map((f) => ({ ...f, folderId: album.id })));
-    // A check records where each manifest is.
+    // A check records where each manifest is, with "/" on every system.
     const manifest = path.join(archive, path.dirname(imported.item.path), "item.json");
-    const recorded = { ...(await json(manifest)), manifestPath: path.relative(archive, manifest) };
+    const recorded = { ...(await json(manifest)), manifestPath: path.relative(archive, manifest).split(path.sep).join("/") };
     await writeFile(manifest, JSON.stringify(recorded));
     library.catalog.put({ ...library.catalog.get(imported.item.id), manifestPath: recorded.manifestPath });
     await library.folders.rename(album.id, "Album (renamed)");
     await library.updateMetadata(imported.item.id, { title: "Renamed song" });
     await library.close();
+    library = null;
     // A rebuilt catalog finds the file where it is now.
-    // Windows may still hold a just-closed file for a moment (antivirus, indexing). Node
-    // retries only with `recursive`, which also removes a single file.
-    await rm(path.join(archive, ".obelisk", "catalog.sqlite"), { force: true, recursive: true, maxRetries: 10 });
+    await rm(path.join(archive, ".obelisk", "catalog.sqlite"), { force: true });
     library = await openLibrary(archive);
     const item = library.catalog.get(imported.item.id);
     assert.ok(item.path.startsWith("Audio/Music/Album (renamed)/"));
     assert.equal(item.title, "Renamed song");
-    await library.close();
   } finally {
+    // Closed first, so a failure above is reported instead of Windows refusing to
+    // delete an open library.
+    await library?.close();
     await rm(root, { recursive: true, force: true });
   }
 });
