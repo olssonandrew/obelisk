@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, rename, chmod, access, symlink, utimes } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, rename, access, symlink, utimes } from "node:fs/promises";
 import { writeFileSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -86,20 +86,15 @@ test("moving a file that shares its folder moves only that file", async () => {
   });
 });
 
-test("a move that fails partway is undone, leaving nothing half-moved", { skip: process.getuid?.() === 0 }, async () => {
+test("a move that fails partway is undone, leaving nothing half-moved", async () => {
   await withLibrary(async (library, root) => {
     const first = await add(library, root, "a.txt", "a");
-    const locked = await library.folders.create(named(library, "Documents").id, "Locked");
-    const second = await add(library, root, "b.txt", "b", locked.id);
-    const lockedDir = path.join(library.archiveRoot, locked.dir);
+    const second = await add(library, root, "b.txt", "b");
     const inbox = path.join(library.archiveRoot, "Inbox");
     const inboxBefore = (await readdir(inbox)).sort();
-    await chmod(lockedDir, 0o555);
-    try {
-      await assert.rejects(library.moveItems([first.id, second.id], named(library, "Inbox").id));
-    } finally {
-      await chmod(lockedDir, 0o755);
-    }
+    // The second file was deleted in the file manager, so its rename fails after the first.
+    await rm(path.join(library.archiveRoot, path.dirname(second.path)), { recursive: true });
+    await assert.rejects(library.moveItems([first.id, second.id], named(library, "Inbox").id));
     // The first file was moved before the second failed; it's back where it was.
     const back = library.catalog.get(first.id);
     assert.ok(!back.path.startsWith("Inbox/"));
@@ -109,24 +104,21 @@ test("a move that fails partway is undone, leaving nothing half-moved", { skip: 
   });
 });
 
-test("recovery that can't finish a rename keeps its plan and finishes on a later opening", { skip: process.getuid?.() === 0 }, async () => {
+test("recovery that can't finish a rename keeps its plan and finishes on a later opening", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "obelisk-safety-"));
   try {
     const archive = path.join(root, "lib");
     await (await openLibrary(archive)).close();
     await mkdir(path.join(archive, "Documents", "Thing"));
     await writeFile(path.join(archive, "Documents", "Thing", "note.txt"), "kept");
-    await mkdir(path.join(archive, "Locked"));
+    // A file where the destination's folder should be: the rename can't happen.
+    await writeFile(path.join(archive, "Locked"), "in the way");
     const journal = path.join(archive, ".obelisk", "journal.json");
     await writeFile(journal, JSON.stringify({ schemaVersion: 1, steps: [{ from: "Documents/Thing", to: "Locked/Thing" }] }));
-    await chmod(path.join(archive, "Locked"), 0o555);
-    try {
-      await (await openLibrary(archive)).close();
-      assert.ok(await exists(journal), "the plan is kept when its rename fails");
-      assert.ok(await exists(path.join(archive, "Documents", "Thing", "note.txt")));
-    } finally {
-      await chmod(path.join(archive, "Locked"), 0o755);
-    }
+    await (await openLibrary(archive)).close();
+    assert.ok(await exists(journal), "the plan is kept when its rename fails");
+    assert.ok(await exists(path.join(archive, "Documents", "Thing", "note.txt")));
+    await rm(path.join(archive, "Locked"));
     await (await openLibrary(archive)).close();
     assert.ok(!(await exists(journal)));
     assert.equal(await readFile(path.join(archive, "Locked", "Thing", "note.txt"), "utf8"), "kept");
@@ -184,7 +176,8 @@ test("a removed item whose manifest was apart from its file stays removed", asyn
     assert.ok(library.catalog.get(item.id).manifestPath);
     await library.removeItems([item.id], trashIn(path.join(root, "bin")));
     await library.close();
-    await rm(path.join(archive, ".obelisk", "catalog.sqlite"), { force: true });
+    // Windows may still hold a just-closed file for a moment (antivirus, indexing).
+    await rm(path.join(archive, ".obelisk", "catalog.sqlite"), { force: true, maxRetries: 10 });
     library = await openLibrary(archive);
     assert.ok(!library.catalog.get(item.id));
     await library.close();
@@ -199,7 +192,8 @@ test("a folder replaced by a link elsewhere is never written through", async () 
     const outside = path.join(root, "outside");
     await mkdir(outside);
     await rename(path.join(library.archiveRoot, trip.dir), path.join(root, "Trip, moved away"));
-    await symlink(outside, path.join(library.archiveRoot, trip.dir));
+    // A junction on Windows, which needs no administrator; a symlink elsewhere.
+    await symlink(outside, path.join(library.archiveRoot, trip.dir), "junction");
     const file = path.join(root, "note.txt");
     await writeFile(file, "hello");
     const [result] = await library.importEntries((await library.previewPaths([file])).map((f) => ({ ...f, folderId: trip.id })));

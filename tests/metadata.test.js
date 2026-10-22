@@ -95,7 +95,7 @@ test("archival fields, ratings, tag renames, and removal stay inside the archive
       [a.id],
     );
     assert.equal(trashed.length, 1);
-    assert.ok(trashed[0].endsWith(path.dirname(a.path)));
+    assert.ok(trashed[0].endsWith(path.join(...path.posix.dirname(a.path).split("/"))));
     assert.equal(library.catalog.get(a.id), null);
     assert.equal(
       await readFile(path.join(root, "archive", b.path), "utf8"),

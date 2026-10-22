@@ -8,8 +8,10 @@ import { existsSync } from "node:fs";
  * at the same time, which a library isn't built for.
  */
 export function cloudService(folder, { home = os.homedir(), env = process.env, exists = existsSync } = {}) {
+  // Resolved alike, so a folder named without its drive letter still matches on Windows.
+  home = path.resolve(home);
   const at = path.resolve(folder),
-    under = (dir) => !!dir && (at === dir || at.startsWith(dir + path.sep)),
+    under = (dir) => !!dir && ((dir = path.resolve(dir)), at === dir || at.startsWith(dir + path.sep)),
     icloud = path.join(home, "Library", "Mobile Documents");
   if (under(icloud)) return "iCloud Drive";
   // With "Desktop & Documents Folders" turned on, those two sync to iCloud as well.
