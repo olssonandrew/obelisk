@@ -54,7 +54,7 @@ export function releaseNotes(changelog, version) {
 
 ---
 
-These builds aren't signed by a registered developer yet. The README says how to open them the first time.
+The Mac builds are signed and notarized by Apple. The Windows and Linux builds aren't signed yet; the README says how to open them the first time.
 
 These builds include the OpenZIM Wikipedia reader and are distributed under GPL-3.0-or-later. The complete corresponding source, Obelisk's and the reader's with every library it's built from, is \`${sourceAssetName(version)}\` below.
 `;

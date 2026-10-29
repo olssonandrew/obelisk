@@ -3,6 +3,14 @@
 Each release's notes are its section here. `npm run release` refuses a version
 without one, and the Release workflow publishes the section as the release notes.
 
+## 0.1.2
+
+- The Mac app is signed and notarized by Apple, so it opens like any other app.
+- Files moved or cloned into the library are read only when you run Verify contents.
+  A ZIM's own checksum is recorded when it's added.
+- Fixed: a file edited while its folder moved, or while it was being deleted, could
+  drop out of the library's list or come back after deletion.
+
 ## 0.1.1
 
 The first public beta.
