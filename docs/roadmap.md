@@ -15,7 +15,9 @@ code.
 | Catalog rebuilt from the files at any time | ✅ | |
 | Folders: tree, drag and drop, reorder, move up, delete (keep or Trash) | ✅ | [folders.md](folders.md) |
 | Tags, ratings, dates, notes, search | ✅ | |
-| Integrity check: missing, moved, changed and untracked files | ✅ | |
+| Integrity check: missing, moved, changed and untracked files | ✅ | From sizes, dates and file IDs; reads only what changed. |
+| Verify contents: gradual, resumable re-read that finds damaged files | ✅ | Started by hand; not yet scheduled or paced. |
+| Checksums worked out in the background after import; ZIMs checked against their own MD5 | ✅ | [library-format.md](library-format.md#checks) |
 | Crash-safe moves (journal, undo on failure, retry on next open) | ✅ | |
 | Warning when a library is in iCloud, Dropbox, OneDrive and similar | ✅ | |
 
@@ -23,7 +25,8 @@ code.
 
 | Feature | Status | Notes |
 |---|---|---|
-| Files and folders from this computer, with review before import | ✅ | |
+| Files and folders from this computer, with review before import | ✅ | Progress in Transfers; clones on APFS; asks to move or copy big files on a drive that can't clone. |
+| Files put in a library folder in Finder are added there | ✅ | [library-format.md](library-format.md#checks) |
 | Web pages, live or from the Wayback Machine (WACZ) | ✅ | |
 | Wikipedia and other Kiwix editions, read in the app | ✅ | [architecture.md](architecture.md#readers) |
 | Wikipedia page: just the full encyclopedia, with and without images | 📋 | Topic editions stay listed from Kiwix; not contributable. |

@@ -6,7 +6,9 @@ import { hasKind } from "../types/index.js";
 /** All user metadata edits share one queue and commit manifests before the catalog. */
 export function createManifestEditor(catalog, root) {
   let queue = Promise.resolve();
-  return (ids, update) => {
+  // `edited: false` for what the app records about the file itself (its checksum),
+  // which isn't an edit to its details.
+  return (ids, update, { edited = true } = {}) => {
     const task = queue
       .catch(() => {})
       .then(async () => {
@@ -38,7 +40,7 @@ export function createManifestEditor(catalog, root) {
               );
             const next = update({ ...item });
             return {
-              item: { ...next, metadataUpdatedAt: new Date().toISOString() },
+              item: edited ? { ...next, metadataUpdatedAt: new Date().toISOString() } : next,
               manifest,
             };
           }),

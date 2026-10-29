@@ -320,7 +320,9 @@ export function createInspector({
             ? "This file is missing from the archive folder. "
             : item.fileState === "ambiguous"
               ? "More than one file could be this one. "
-              : "This file no longer matches its recorded checksum. ",
+              : item.fileState === "damaged"
+                ? "This file is damaged. Its contents no longer match its checksum, though nothing saved over it. "
+                : "This file no longer matches its recorded checksum. ",
         ),
         go,
       );
@@ -512,11 +514,15 @@ export function createInspector({
           ? "File missing"
           : item.fileState === "ambiguous"
             ? "Needs review"
-            : item.fileState === "modified" || item.integrity === "changed"
-              ? "Changed since saved"
-              : item.integrity === "publisher-verified"
-                ? "Verified against publisher"
-                : "Checksum recorded",
+            : item.fileState === "damaged"
+              ? "Damaged"
+              : item.fileState === "modified" || item.integrity === "changed"
+                ? "Changed since saved"
+                : item.integrity === "pending"
+                  ? "Not checked yet"
+                  : item.integrity === "publisher-verified"
+                    ? "Verified against publisher"
+                    : "Checksum recorded",
       ),
     );
     const row = el("div", "", "property"),
@@ -532,6 +538,7 @@ export function createInspector({
       sha.append(el("dt", "SHA-256"), value);
       preservation.append(sha);
     }
+    property(preservation, "Contents verified", shortDate(item.verifiedAt));
     property(
       preservation,
       "Original title",

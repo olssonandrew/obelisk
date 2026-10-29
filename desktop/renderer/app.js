@@ -1019,7 +1019,13 @@ $("#preview-title").ondblclick = () => {
 function renderJobs() {
   const host = $("#jobs");
   host.replaceChildren();
-  if (!state.jobs.length) {
+  const imports = state.imports || [],
+    importsIn = (phases) => imports.filter((t) => phases.includes(t.phase)).map((task) => ({ task })),
+    reading = state.reading,
+    readingShown = reading && (reading.current || reading.waiting || reading.run);
+  if (readingShown) host.append(el("div", "Checking", "jobs-heading"), readingRow(reading));
+  if (!state.jobs.length && !imports.length) {
+    if (readingShown) return;
     host.append(
       emptyState(
         "download",
@@ -1045,9 +1051,9 @@ function renderJobs() {
       ...jobs.map((job) => ({ job })),
     ];
   for (const [title, entries] of [
-    ["In progress", rows(loose.filter((j) => live.includes(j.status)), false)],
-    ["Failed", rows(loose.filter((j) => j.status === "failed"), null)],
-    ["Finished", rows(loose.filter((j) => j.status === "complete"), true)],
+    ["In progress", [...importsIn(["waiting", "copying", "checking"]), ...rows(loose.filter((j) => live.includes(j.status)), false)]],
+    ["Failed", [...importsIn(["failed"]), ...rows(loose.filter((j) => j.status === "failed"), null)]],
+    ["Finished", [...importsIn(["complete"]), ...rows(loose.filter((j) => j.status === "complete"), true)]],
   ]) {
     if (!entries.length) continue;
     const heading = el("div", `${title} · ${entries.length}`, "jobs-heading");
@@ -1060,7 +1066,8 @@ function renderJobs() {
         }), "text-button"),
       );
     host.append(heading);
-    for (const entry of entries) host.append(entry.group ? groupRow(entry.group, entry.jobs) : jobRow(entry.job));
+    for (const entry of entries)
+      host.append(entry.group ? groupRow(entry.group, entry.jobs) : entry.task ? importRow(entry.task) : jobRow(entry.job));
   }
 }
 // Which collections are opened up in Transfers, to show their files.
@@ -1153,6 +1160,130 @@ function speedOf(job) {
 }
 const duration = (seconds) =>
   seconds < 90 ? `${Math.max(1, Math.round(seconds))} s` : seconds < 5400 ? `${Math.round(seconds / 60)} min` : `${(seconds / 3600).toFixed(1)} h`;
+/** Opens the library at one item. */
+function showInLibrary(id) {
+  views.reset();
+  folder = null;
+  resetFilters();
+  setView("library");
+  renderCollections();
+  renderLibrary();
+  select(id);
+  reveal(id, "center");
+}
+// A file put in the library folder in Finder is added by itself, and said once.
+const announced = new Set();
+function announceAdded() {
+  for (const task of state.imports || []) {
+    if (!task.auto || announced.has(task.id) || !["complete", "failed"].includes(task.phase)) continue;
+    announced.add(task.id);
+    const item = byId(task.itemId),
+      place = state.folders?.find((f) => f.id === item?.folderId)?.name;
+    toast(task.phase === "failed" ? `Couldn’t add ${task.title}: ${task.error}` : `Added ${task.title}${place ? ` to ${place}` : ""}.`);
+  }
+}
+/** The background reader: checksums of new files, and a Verify contents run. */
+function readingRow(r) {
+  const row = el("article", "", "job"),
+    top = el("div", "", "job-top"),
+    controls = el("div", "", "job-controls"),
+    act = (label, action, cls = "secondary") =>
+      button(label, run(async () => {
+        await desktop.reading(action);
+        await refresh();
+        renderJobs();
+      }), cls);
+  top.append(el("h3", r.run ? "Verifying contents" : "Checking new files"), controls);
+  controls.append(r.paused ? act("Resume", "resume") : act("Pause", "pause"));
+  if (r.run) controls.append(act("Stop", "stopVerify", "text-button"));
+  const c = r.current,
+    share = c?.bytes ? Math.min(1, c.done / c.bytes) : null,
+    rate = c ? speedOf({ id: `read:${c.id}`, bytes: c.done }) : 0,
+    parts = r.paused ? ["Paused"] : c ? [c.title, `${size(c.done)} of ${size(c.bytes)}`, `${Math.floor(share * 100)}%`] : ["Waiting to start"];
+  if (c && !r.paused && rate > 1024) parts.push(`${size(rate)}/s`, `about ${duration((c.bytes - c.done) / rate)} left`);
+  row.append(top, el("p", parts.join(" · ")));
+  const more = [],
+    queued = r.waiting - (c && !c.verify ? 1 : 0);
+  if (queued > 0) more.push(`${queued.toLocaleString()} more new ${queued === 1 ? "file" : "files"} to check`);
+  if (r.run) more.push(`${r.run.done.toLocaleString()} of ${r.total.toLocaleString()} files verified`, `${size(r.run.read)} of ${size(r.run.bytes)}`);
+  if (more.length) row.append(el("p", more.join(" · ")));
+  if (c && !r.paused) {
+    const bar = el("div", "", "job-bar"),
+      fill = el("i");
+    bar.setAttribute("role", "progressbar");
+    bar.setAttribute("aria-label", `Progress for ${c.title}`);
+    bar.setAttribute("aria-valuenow", String(Math.round(share * 100)));
+    fill.style.width = `${share * 100}%`;
+    bar.append(fill);
+    row.append(bar);
+  }
+  return row;
+}
+/** Verify contents on the Archive page: how much has been read and confirmed, and when. */
+function renderVerify() {
+  const r = state.reading,
+    card = $("#verify-card");
+  card.hidden = !r?.total;
+  if (!r?.total) return;
+  const unread = r.total - r.verified,
+    copy = el("div");
+  copy.append(
+    el(
+      "h2",
+      r.run
+        ? "Verifying contents"
+        : unread
+          ? `${unread.toLocaleString()} ${unread === 1 ? "file hasn’t" : "files haven’t"} been verified`
+          : "Every file’s contents verified",
+    ),
+    el(
+      "p",
+      r.run
+        ? `${r.run.done.toLocaleString()} of ${r.total.toLocaleString()} files read. It carries on in the background and after a restart.`
+        : `Reads every file to catch damage that sizes and dates can’t show${r.oldest ? `. Oldest verification: ${shortDate(r.oldest)}` : ""}.`,
+    ),
+  );
+  $("#verify-hero").className = `hero${r.damaged ? " warn" : !unread && !r.run ? " ok" : ""}`;
+  $("#verify-hero").replaceChildren(icon(r.damaged ? "alert" : "check"), copy);
+  $("#verify-contents").textContent = r.run ? "Stop verifying" : "Verify contents";
+}
+$("#verify-contents").onclick = run(async () => {
+  await desktop.reading(state.reading?.run ? "stopVerify" : "verify");
+  await refresh();
+  renderVerify();
+});
+/** A file being added from this computer: copied in, then checked. */
+function importRow(task) {
+  const row = el("article", "", `job${task.phase === "failed" ? " error" : ""}`),
+    top = el("div", "", "job-top"),
+    controls = el("div", "", "job-controls");
+  top.append(el("h3", task.title), controls);
+  if (task.phase === "complete" && byId(task.itemId))
+    controls.append(button("View in library", () => showInLibrary(task.itemId), "secondary"));
+  const moving = ["copying", "checking"].includes(task.phase),
+    known = moving && task.bytes > 0 && task.done > 0,
+    share = known ? Math.min(1, task.done / task.bytes) : null,
+    rate = moving ? speedOf({ id: task.id, bytes: task.done }) : 0,
+    parts = [{ waiting: "Waiting to start", copying: "Copying", checking: "Checking the file", complete: "Added to library", failed: "Failed" }[task.phase]];
+  if (known) parts.push(`${size(task.done)} of ${size(task.bytes)}`, `${Math.floor(share * 100)}%`);
+  else if (task.bytes) parts.push(size(task.bytes));
+  if (rate > 1024) parts.push(`${size(rate)}/s`, `about ${duration((task.bytes - task.done) / rate)} left`);
+  row.append(top, el("p", parts.join(" · ")));
+  if (moving || task.phase === "waiting") {
+    const bar = el("div", "", `job-bar${known ? "" : " busy"}`),
+      fill = el("i");
+    bar.setAttribute("role", "progressbar");
+    bar.setAttribute("aria-label", `Progress for ${task.title}`);
+    if (known) {
+      bar.setAttribute("aria-valuenow", String(Math.round(share * 100)));
+      fill.style.width = `${share * 100}%`;
+    }
+    bar.append(fill);
+    row.append(bar);
+  }
+  if (task.error) row.append(el("p", task.error));
+  return row;
+}
 function jobRow(job) {
   const row = el("article", "", `job${job.status === "failed" ? " error" : ""}`),
     top = el("div", "", "job-top");
@@ -1181,16 +1312,7 @@ function jobRow(job) {
     controls.append(
       button(
         "View in library",
-        () => {
-          views.reset();
-          folder = null;
-          resetFilters();
-          setView("library");
-          renderCollections();
-          renderLibrary();
-          select(job.itemId);
-          reveal(job.itemId, "center");
-        },
+        () => showInLibrary(job.itemId),
         "secondary",
       ),
     );
@@ -1354,6 +1476,7 @@ function renderArchive() {
     total = items.reduce((n, i) => n + i.bytes, 0),
     flagged = items.filter(needsAttention).length,
     verified = items.filter((i) => i.integrity === "publisher-verified").length;
+  renderVerify();
   $("#archive-title").textContent = state.name || "Library";
   $("#archive-where").textContent = state.archiveRoot || "";
   // Files in the folder that were never added, for example copied in with Finder.
@@ -1441,10 +1564,10 @@ function renderArchive() {
     el(
       "p",
       flagged
-        ? "Some files moved, changed or went missing. See below."
+        ? "Some files moved, changed, went missing or are damaged. See below."
         : state.lastCheck
           ? `Checked ${shortDate(state.lastCheck.checkedAt)}.`
-          : "Confirms every file is unchanged and where it should be.",
+          : "Finds files that moved, changed or went missing, from their sizes and dates.",
     ),
   );
   hero.className = `hero${flagged ? " warn" : state.lastCheck ? " ok" : ""}`;
@@ -1512,14 +1635,17 @@ async function load() {
     attentionCount = attention;
     $("#health-count").textContent = attention + (state.untracked || 0) || "";
     if (!changed && state.untracked !== shownUntracked && view === "health") renderArchive();
+    if (view === "health") renderVerify();
     if (changed) {
       $("#library-count").textContent = state.items.length || "";
       $("#status-summary").textContent =
         `${state.items.length} files · ${size(state.items.reduce((n, i) => n + i.bytes, 0))}`;
     }
-    const count = state.jobs.filter((j) =>
-      ["queued", "downloading", "verifying", "pausing", "waiting"].includes(j.status),
-    ).length;
+    const count =
+      state.jobs.filter((j) => ["queued", "downloading", "verifying", "pausing", "waiting"].includes(j.status)).length +
+      (state.imports || []).filter((t) => ["waiting", "copying", "checking"].includes(t.phase)).length +
+      (state.reading?.current && !state.reading.paused ? 1 : 0);
+    announceAdded();
     $("#transfer-count").textContent = count || "";
     if (view === "transfers" || count) renderJobs();
     if (view === "discover" && collectionsUI.open) collectionsUI.update();
@@ -2078,6 +2204,11 @@ onboarding.start(state);
 desktop.onLibraryChange(refresh);
 // Speeds, "stalled" and times move on even when no new data arrives.
 setInterval(() => {
-  if (view === "transfers" && state.jobs.some((j) => ["queued", "downloading", "verifying", "pausing"].includes(j.status)))
+  if (
+    view === "transfers" &&
+    (state.jobs.some((j) => ["queued", "downloading", "verifying", "pausing"].includes(j.status)) ||
+      (state.imports || []).some((t) => ["copying", "checking"].includes(t.phase)) ||
+      state.reading?.current)
+  )
     renderJobs();
 }, 2000);

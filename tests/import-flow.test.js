@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile, readdir, readFile, rm, rename } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, readdir, readFile, rm, rename, stat } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import http from "node:http";
 import path from "node:path";
@@ -130,6 +131,118 @@ test("folders macOS shows as one file (Apple Books EPUBs) import as one standard
     await library.lookForUntracked();
     assert.equal(library.state().untracked, 1);
     assert.deepEqual((await library.check()).untracked, ["Walden copy.epub"]);
+  } finally {
+    await library.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("an import is usable at once, shows its progress, and is read once for its checksum", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "obelisk-progress-"));
+  const library = await openLibrary(path.join(root, "archive"));
+  try {
+    const bytes = Buffer.alloc(9 * 1024 ** 2, 7),
+      source = path.join(root, "atlas.zim");
+    await writeFile(source, bytes);
+    const seen = [];
+    library.onChange(() => {
+      const { imports, reading } = library.state();
+      for (const task of imports) seen.push(`${task.phase}:${task.done}`);
+      if (reading.current) seen.push(`reading:${reading.current.done}`);
+    });
+    const [result] = await library.importPaths([source]);
+    assert.deepEqual(await readFile(path.join(library.archiveRoot, result.item.path)), bytes, "it's there before it's checked");
+    // Cloned on the same drive, its checksum is read in the background; copied, as it's written.
+    assert.equal(result.item.integrity, result.item.sha256 ? "hashed" : "pending");
+    await library.reading.idle();
+    const item = library.catalog.get(result.item.id);
+    assert.equal(item.sha256, createHash("sha256").update(bytes).digest("hex"));
+    assert.equal(item.integrity, "hashed");
+    assert.ok(item.verifiedAt && item.stamp.size === bytes.length);
+    assert.ok(seen.some((s) => /^(copying|reading):[1-9]/.test(s)), "progress is reported along the way");
+    const [task] = library.state().imports;
+    assert.deepEqual([task.title, task.phase, task.itemId], ["atlas", "complete", result.item.id]);
+    assert.deepEqual(await readFile(source), bytes, "the original stays");
+    assert.deepEqual(await readdir(path.join(library.archiveRoot, ".obelisk", "downloads")), [], "nothing is left behind");
+    library.clearImports();
+    assert.deepEqual(library.state().imports, []);
+  } finally {
+    await library.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a file put in a library folder while it is open is moved into place, not copied", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "obelisk-adopt-"));
+  await mkdir(path.join(root, "archive"), { recursive: true });
+  await writeFile(path.join(root, "archive", "older.txt"), "here before it opened");
+  const library = await openLibrary(path.join(root, "archive"));
+  try {
+    await library.settled();
+    const folder = library.state().folders.find((f) => f.name === "Books") || library.state().folders.find((f) => f.dir);
+    const placed = path.join(library.archiveRoot, folder.dir, "wikipedia.zim");
+    await writeFile(placed, "pretend encyclopedia");
+    const { ino } = await stat(placed);
+    // First look: noticed. Next look, unchanged: added.
+    await library.lookForUntracked();
+    assert.equal(library.state().items.length, 0, "a file still arriving is left alone");
+    for (let i = 0; i < 100 && !library.state().items.length; i++) {
+      await library.lookForUntracked();
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    const [item] = library.state().items;
+    assert.equal(item.folderId, folder.id, "it stays in the folder it was put in");
+    const saved = path.join(library.archiveRoot, item.path);
+    assert.equal(await readFile(saved, "utf8"), "pretend encyclopedia");
+    assert.equal((await stat(saved)).ino, ino, "the same file, moved");
+    assert.ok(!(await readdir(path.join(library.archiveRoot, folder.dir))).includes("wikipedia.zim"));
+    assert.ok(library.state().imports.some((t) => t.auto && t.phase === "complete"));
+    // What was already loose when the library opened waits to be reviewed.
+    assert.deepEqual(await library.untrackedPaths(), [path.join(library.archiveRoot, "older.txt")]);
+  } finally {
+    await library.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a big file chosen to be moved in is checked, then moved, never copied", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "obelisk-move-"));
+  const library = await openLibrary(path.join(root, "archive"));
+  try {
+    const source = path.join(root, "Wikipedia", "wikipedia_en_all.zim");
+    await mkdir(path.dirname(source));
+    await writeFile(source, "pretend encyclopedia");
+    const { ino } = await stat(source);
+    const [file] = await library.previewPaths([source]);
+    // Only the listing may say a file can be moved; asking isn't enough.
+    const [copied] = await library.importEntries([{ ...file, move: true }]);
+    assert.equal(await readFile(source, "utf8"), "pretend encyclopedia", "not movable: copied, the original stays");
+    const [moved] = await library.importEntries([{ ...file, movable: true, move: true }]);
+    const saved = path.join(library.archiveRoot, moved.item.path);
+    assert.equal((await stat(saved)).ino, ino, "the same file, moved");
+    assert.equal(moved.item.integrity, "pending", "moved at once, read after");
+    await library.reading.idle();
+    assert.equal(library.catalog.get(moved.item.id).sha256, library.catalog.get(copied.item.id).sha256);
+    assert.deepEqual(await readdir(path.dirname(source)), [], "it left its old folder");
+  } finally {
+    await library.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("several big files chosen to be moved in all move, each into its own item folder", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "obelisk-move-many-"));
+  const library = await openLibrary(path.join(root, "archive"));
+  try {
+    await mkdir(path.join(root, "Drive"));
+    const names = ["a.zim", "b.zim", "c.zim"];
+    for (const name of names) await writeFile(path.join(root, "Drive", name), `edition ${name}`);
+    const listed = await library.previewPaths(names.map((n) => path.join(root, "Drive", n)));
+    const results = await library.importEntries(listed.map((f) => ({ ...f, movable: true, move: true })));
+    assert.deepEqual(results.map((r) => r.error), [undefined, undefined, undefined]);
+    assert.deepEqual(await readdir(path.join(root, "Drive")), [], "all of them moved");
+    assert.equal(new Set(results.map((r) => path.dirname(r.item.path))).size, 3);
+    assert.deepEqual(library.state().imports.map((t) => t.phase), ["complete", "complete", "complete"]);
   } finally {
     await library.close();
     await rm(root, { recursive: true, force: true });

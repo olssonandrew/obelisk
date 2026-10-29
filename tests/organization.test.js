@@ -25,7 +25,9 @@ test("folder imports are filed by type, keep where they came from, and reconcile
       "Original account statement.",
     );
     library = await openLibrary(path.join(root, "archive"));
-    const [result] = await library.importPaths([path.join(root, "Bank")]);
+    const [imported] = await library.importPaths([path.join(root, "Bank")]);
+    await library.reading.idle();
+    const result = { item: library.catalog.get(imported.item.id) };
     assert.ok(result.item.path.startsWith("Documents/statement--"));
     assert.equal(result.item.type, "document");
     assert.equal(result.item.kind, "note");
@@ -81,8 +83,9 @@ test("archive check ignores links out of archive, and identical files can be kep
     library = await openLibrary(path.join(root, "archive"));
     const publicCopy = await library.importPaths([source]);
     const again = await library.importPaths([source], { type: "other" });
+    await library.reading.idle();
     assert.notEqual(publicCopy[0].item.id, again[0].item.id);
-    assert.equal(publicCopy[0].item.sha256, again[0].item.sha256);
+    assert.equal(library.catalog.get(publicCopy[0].item.id).sha256, library.catalog.get(again[0].item.id).sha256);
     if (process.platform !== "win32")
       await symlink(source, path.join(library.archiveRoot, "link.txt"));
     const report = await library.check();

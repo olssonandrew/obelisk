@@ -64,7 +64,6 @@ if (process.isMainFrame)
     setupOpen: (folder) => invoke("setup:open", folder),
     setupFinish: () => invoke("setup:finish"),
     setupRetry: () => invoke("setup:retry"),
-    importFiles: (options) => invoke("library:import", options),
     chooseImport: (options) => invoke("import:choose", options),
     prepareDrop: (files, options) =>
       invoke(
@@ -76,18 +75,13 @@ if (process.isMainFrame)
     reviewUntracked: () => invoke("import:untracked"),
     cancelImport: (token) => invoke("import:cancel", token),
     checkArchive: () => invoke("library:check"),
+    reading: (action) => invoke("reading:action", action),
     acceptChange: (id) => invoke("library:accept", id),
     saveSoftwareNotes: (id, notes) =>
       invoke("software:notes", id, notes),
     downloadSoftware: (id, platform, arch) =>
       invoke("software:download", id, platform, arch),
     saveAppCopy: () => invoke("software:self"),
-    importDropped: (files, options) =>
-      invoke(
-        "library:drop",
-        files.map((file) => webUtils.getPathForFile(file)).filter(Boolean),
-        options,
-      ),
     reveal: (id) => invoke("library:reveal", id),
     openExternal: (id) => invoke("library:open", id),
     readText: (id) => invoke("library:text", id),

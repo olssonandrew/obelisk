@@ -1,12 +1,15 @@
 import { createHash, randomUUID } from "node:crypto";
 import { transferError } from "./transfer-errors.js";
-import { createReadStream, createWriteStream } from "node:fs";
-import { mkdir, rename, writeFile, stat, rm, rmdir, realpath } from "node:fs/promises";
+import { createReadStream, createWriteStream, constants as fsConstants } from "node:fs";
+import { mkdir, rename, writeFile, stat, statfs, rm, rmdir, realpath, copyFile, open } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { sourceDate, fileDate } from "./dates.js";
 import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import path from "node:path";
 import { classify, accessNote, shelfOf, hasKind } from "../types/index.js";
+const execFileAsync = promisify(execFile);
 
 export function safeFilename(input) {
   let name = String(input)
@@ -59,10 +62,148 @@ async function resolved(file) {
     }
 }
 export const OUTSIDE = "This folder now leads outside the library, so nothing was saved there.";
-export async function hashFile(file) {
-  const hash = createHash("sha256");
-  for await (const chunk of createReadStream(file)) hash.update(chunk);
-  return hash.digest("hex");
+// Large reads: a 64 KB default makes a big file's checksum take half again as long.
+const CHUNK = 4 * 1024 ** 2;
+/** A file's SHA-256. `progress` is told how many bytes have been read so far. */
+export async function hashFile(file, progress) {
+  return (await readChecksums(file, progress)).sha256;
+}
+
+/**
+ * Where a ZIM keeps the MD5 of everything before it, and that MD5. Kiwix writes it
+ * when it builds the file, so a match means the file is exactly what was published.
+ */
+async function zimChecksum(file) {
+  if (!/\.zim$/i.test(file)) return null;
+  const handle = await open(file, "r");
+  try {
+    const head = Buffer.alloc(80),
+      { size } = await handle.stat();
+    if ((await handle.read(head, 0, 80, 0)).bytesRead < 80 || head.readUInt32LE(0) !== 72173914) return null;
+    const at = Number(head.readBigUInt64LE(72));
+    if (at < 80 || at + 16 > size) return null;
+    const stored = Buffer.alloc(16);
+    await handle.read(stored, 0, 16, at);
+    return { at, md5: stored.toString("hex") };
+  } finally {
+    await handle.close();
+  }
+}
+/** Takes a file's bytes in order and gives its checksums once they have all been seen. */
+async function checksummer(file) {
+  const sha = createHash("sha256"),
+    zim = await zimChecksum(file).catch(() => null),
+    md5 = zim && createHash("md5");
+  let done = 0;
+  return {
+    update(chunk) {
+      sha.update(chunk);
+      if (md5 && done < zim.at) md5.update(done + chunk.length <= zim.at ? chunk : chunk.subarray(0, zim.at - done));
+      return (done += chunk.length);
+    },
+    // `embedded`: true or false for a file that carries its own checksum, else null.
+    finish: () => ({ sha256: sha.digest("hex"), embedded: md5 ? md5.digest("hex") === zim.md5 : null }),
+  };
+}
+/** Stopped reading on purpose: paused, or the library closed. */
+export class Stopped extends Error {}
+/**
+ * Reads a file once for its SHA-256, and, for a file that carries its own checksum
+ * (a ZIM), whether it still matches. `stopped()` is asked between reads.
+ */
+export async function readChecksums(file, progress, stopped = () => false) {
+  const sums = await checksummer(file);
+  for await (const chunk of createReadStream(file, { highWaterMark: CHUNK })) {
+    if (stopped()) throw new Stopped("Stopped.");
+    const done = sums.update(chunk);
+    progress?.(done);
+  }
+  return sums.finish();
+}
+/**
+ * What a check compares instead of reading the file: its size and modified date, as
+ * rsync and git do, and its file ID, which a move on the same drive keeps.
+ */
+export const stampOf = (info) => ({ size: info.size, mtimeMs: info.mtimeMs, ino: info.ino });
+// Dates are compared to the millisecond: tools that copy or restore files often keep no more.
+export const sameStamp = (stamp, info) => !!stamp && stamp.size === info.size && Math.abs(stamp.mtimeMs - info.mtimeMs) < 1;
+
+const sizeText = (n) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(n / 1e6))} MB`);
+const clonable = new Map();
+/**
+ * Whether the drive holding `dir` can clone files, sharing storage between copies:
+ * APFS on macOS, Btrfs or XFS on Linux. Mac OS Extended (HFS+) and exFAT can't.
+ */
+export async function canClone(dir) {
+  const { dev } = await stat(dir);
+  if (!clonable.has(dev)) clonable.set(dev, cloneSupport(dir));
+  return clonable.get(dev);
+}
+async function cloneSupport(dir) {
+  try {
+    if (process.platform === "darwin") {
+      // The drive whose mount point holds the folder, the longest one that does.
+      const real = await realpath(dir),
+        { stdout } = await execFileAsync("/sbin/mount");
+      let found = null;
+      for (const line of stdout.split("\n")) {
+        const [, at, type] = / on (.+) \(([^,)]+)/.exec(line) || [];
+        if (at && (real === at || real.startsWith(at === "/" ? "/" : `${at}/`)) && (!found || at.length > found.at.length)) found = { at, type };
+      }
+      return found?.type === "apfs";
+    }
+    if (process.platform === "linux") return [0x9123683e, 0x58465342].includes((await statfs(dir)).type);
+  } catch {}
+  return false;
+}
+/** A copy that shares the original's storage, or false where one can't be made. */
+function cloneFile(source, destination, bytes) {
+  if (process.platform !== "darwin")
+    return copyFile(source, destination, fsConstants.COPYFILE_FICLONE_FORCE).then(
+      () => true,
+      () => rm(destination, { force: true }).then(() => false),
+    );
+  // Node's own clone flag copies in full on macOS; cp -c makes a real APFS clone.
+  return new Promise((resolve) => {
+    const child = execFile("/bin/cp", ["-c", "--", source, destination], (error) => {
+      clearInterval(watch);
+      if (error) rm(destination, { force: true }).then(() => resolve(false), () => resolve(false));
+      else resolve(true);
+    });
+    // A clone appears whole at once. One that grows is cp copying instead, slowly and
+    // with no way to show progress, so it is stopped.
+    const watch = setInterval(() => {
+      stat(destination).then(({ size }) => size < bytes && child.kill(), () => {});
+    }, 100);
+  });
+}
+/**
+ * Copies a file in. A copy from another drive is read once, checksummed as it is
+ * written, and returns its checksums. On a drive that clones, the copy takes no time
+ * or space and its checksums are left for later: `{ sha256: null }`.
+ */
+export async function copyIn(source, destination, progress) {
+  const [from, to, into] = await Promise.all([stat(source), stat(path.dirname(destination)), statfs(path.dirname(destination))]);
+  if (from.dev === to.dev && (await canClone(path.dirname(destination)))) {
+    progress?.(0, "copying");
+    if (await cloneFile(source, destination, from.size)) return { sha256: null, embedded: null };
+  }
+  const free = into.bavail * into.bsize;
+  if (from.size > free - 512 * 1024 ** 2)
+    throw new Error(`Not enough disk space. This needs ${sizeText(from.size)}; ${sizeText(Math.max(0, free))} is free.`);
+  const sums = await checksummer(source);
+  await pipeline(
+    createReadStream(source, { highWaterMark: CHUNK }),
+    new Transform({
+      transform(chunk, encoding, callback) {
+        const done = sums.update(chunk);
+        progress?.(done, "copying");
+        callback(null, chunk);
+      },
+    }),
+    createWriteStream(destination, { flags: "wx" }),
+  );
+  return sums.finish();
 }
 
 export async function receiveFile(
@@ -135,12 +276,18 @@ async function commitImport({
   created,
   creator,
   directory,
+  // Already worked out while the file was copied in, with whether it matched the
+  // checksum the file carries itself (a ZIM).
+  sha256,
+  embedded = null,
+  // Moved or cloned in: usable at once, its checksum read in the background after.
+  pending = false,
 }) {
   filename = safeFilename(filename);
   const target = fileTarget(filename, { type, kind, fallback }),
     shelf = shelfOf(target.type);
   kind = target.kind;
-  const checksum = await hashFile(temporaryPath);
+  const checksum = sha256 || (pending ? null : await hashFile(temporaryPath));
   const bytes = (await stat(temporaryPath)).size;
   // Not the file that was described: the source has changed it, or sent something else.
   if (expectedBytes && bytes !== expectedBytes)
@@ -194,7 +341,9 @@ async function commitImport({
     acquiredAt: new Date().toISOString(),
     source: source || { adapter: "import", provider: "Local import" },
     rights: rights || "Not specified; check the original source.",
-    integrity: expectedSha256 ? "publisher-verified" : "hashed",
+    integrity: expectedSha256 || embedded ? "publisher-verified" : checksum ? "hashed" : "pending",
+    ...(checksum ? { verifiedAt: new Date().toISOString() } : {}),
+    ...(embedded === false ? { fileState: "damaged" } : {}),
     offlineTested: false,
     accessNote: accessNote(filename, shelf.id),
     demo,
@@ -205,6 +354,7 @@ async function commitImport({
   // nothing. If even that fails, the file stays, and Check archive finds it.
   const saved = path.join(itemDirectory, filename);
   await rename(temporaryPath, saved);
+  item.stamp = stampOf(await stat(saved));
   try {
     await writeJson(path.join(itemDirectory, "item.json"), item);
   } catch (error) {

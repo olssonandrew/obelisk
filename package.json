@@ -41,6 +41,7 @@
     "playwright-core": "1.64.0",
     "pmtiles": "4.5.0"
   },
+  "homepage": "https://github.com/olssonandrew/obelisk",
   "main": "desktop/main.js",
   "productName": "Obelisk",
   "obelisk": {

@@ -5,9 +5,12 @@ import {
   lstat,
   realpath,
 } from "node:fs/promises";
-import { hashFile, writeJson } from "./archive.js";
+import { hashFile, writeJson, stampOf, sameStamp } from "./archive.js";
 import { packageOf } from "./bundle.js";
-// Never follow symlinks, delete content, or replace the original checksum.
+// A manifest being saved: written beside it under a temporary name, then renamed over it.
+const saving = (name) => /^(item|folder)\.json\.[0-9a-f-]{36}\.tmp$/.test(name);
+// Never follow symlinks, delete content, or replace the original checksum. A file is
+// read only when its size or date has changed, or to find where it moved.
 export async function scanArchive(catalog, root) {
   const files = [],
     manifests = [],
@@ -42,7 +45,7 @@ export async function scanArchive(catalog, root) {
           } catch {
             errors.push(path.relative(root, file));
           }
-        } else if (!["ABOUT THIS ARCHIVE.txt", "folder.json"].includes(child.name)) files.push(file);
+        } else if (!["ABOUT THIS ARCHIVE.txt", "folder.json"].includes(child.name) && !saving(child.name)) files.push(file);
       }
     }
   }
@@ -50,8 +53,9 @@ export async function scanArchive(catalog, root) {
   const fileSet = new Set(files),
     claimed = new Set(),
     hashes = new Map(),
-    sizes = new Map();
-  for (const file of files) sizes.set(file, (await lstat(file)).size);
+    // Size, date and file ID of everything found: what most of the check runs on.
+    infos = new Map();
+  for (const file of files) infos.set(file, await lstat(file));
   const hash = async (file) => {
     if (!hashes.has(file)) hashes.set(file, await hashFile(file));
     return hashes.get(file);
@@ -71,6 +75,11 @@ export async function scanArchive(catalog, root) {
   for (const m of manifests)
     if (!items.has(m.item.id)) items.set(m.item.id, m.item);
   const changes = [];
+  // Whether a file found elsewhere is this item's: the same file moved (same ID and
+  // size), or failing that the same contents. Only same-size files are ever read.
+  const isIt = async (old, file) =>
+    infos.get(file).size === old.bytes &&
+    ((old.stamp?.ino && infos.get(file).ino === old.stamp.ino) || (old.sha256 && (await hash(file)) === old.sha256));
   for (const old of items.values()) {
     if(typeof old.path!=="string"||typeof old.filename!=="string"){changes.push({id:old.id,title:old.title,status:"invalid metadata"});continue;}
     const m = manifestById.get(old.id);
@@ -92,20 +101,13 @@ export async function scanArchive(catalog, root) {
         const candidates = files.filter(
           (f) => path.dirname(f) === path.dirname(m.file),
         );
-        if (
-          candidates.length === 1 &&
-          (await hash(candidates[0])) === old.sha256
-        )
-          file = candidates[0];
+        if (candidates.length === 1 && (await isIt(old, candidates[0]))) file = candidates[0];
       }
     }
     if (!file) {
       const matches = [];
-      for (const candidate of files) {
-        if (claimed.has(candidate) || sizes.get(candidate) !== old.bytes)
-          continue;
-        if ((await hash(candidate)) === old.sha256) matches.push(candidate);
-      }
+      for (const candidate of files)
+        if (!claimed.has(candidate) && (await isIt(old, candidate))) matches.push(candidate);
       if (matches.length === 1) file = matches[0];
     }
     if (!file) {
@@ -114,11 +116,21 @@ export async function scanArchive(catalog, root) {
       continue;
     }
     claimed.add(file);
-    const observed = await hash(file),
-      relative = path.relative(root, file).split(path.sep).join("/");
-    const status =
-      observed !== old.sha256
-        ? "modified"
+    const info = infos.get(file),
+      relative = path.relative(root, file).split(path.sep).join("/"),
+      unchanged = sameStamp(old.stamp, info);
+    // Contents are read only when the size and date no longer say they're the same.
+    // A file without a checksum yet is left to the background reader; one from before
+    // stamps were kept gets one now, and Verify contents reads it later.
+    let observed = null,
+      same;
+    if (!old.sha256 || unchanged || (!old.stamp && info.size === old.bytes)) same = true;
+    else if (info.size !== old.bytes) same = false;
+    else same = (observed = await hash(file)) === old.sha256;
+    const status = !same
+      ? "modified"
+      : old.fileState === "damaged" && unchanged
+        ? "damaged"
         : relative !== old.path
           ? "moved"
           : "ok";
@@ -127,9 +139,9 @@ export async function scanArchive(catalog, root) {
       path: relative,
       filename: path.basename(file),
       fileState: status === "moved" ? "ok" : status,
-      observedSha256: observed,
-      observedBytes: sizes.get(file),
-      checkedAt: new Date().toISOString(),
+      observedBytes: info.size,
+      ...(observed ? { observedSha256: observed } : {}),
+      ...(same ? { stamp: stampOf(info) } : {}),
     };
     if (status === "modified") {
       item.integrity = "changed";
@@ -144,9 +156,13 @@ export async function scanArchive(catalog, root) {
     if (m) {
       if (path.dirname(m.file) === path.dirname(file)) delete item.manifestPath;
       else item.manifestPath = path.relative(root, m.file).split(path.sep).join("/");
-      await writeJson(m.file, item);
     }
-    catalog.put(item);
+    // Only what changed is written: a check of a big library touches few files.
+    if (JSON.stringify(item) !== JSON.stringify(old)) {
+      item.checkedAt = new Date().toISOString();
+      if (m) await writeJson(m.file, item);
+      catalog.put(item);
+    }
     if (status !== "ok")
       changes.push({ id: item.id, title: item.title, status, path: relative });
   }
@@ -175,6 +191,8 @@ export async function acceptCurrentFile(catalog, root, id) {
     ].slice(-20),
     sha256,
     bytes: info.size,
+    stamp: stampOf(info),
+    verifiedAt: new Date().toISOString(),
     fileState: "ok",
     integrity: "hashed",
     acceptedAt: new Date().toISOString(),
@@ -224,7 +242,7 @@ export async function findUntracked(catalog, root, { stopped = () => false } = {
       if (child.isDirectory()) {
         if (packageOf(file)) files.push(file);
         else if (!child.name.endsWith(".app")) await walk(file, depth + 1);
-      } else if (child.isFile() && !["item.json", "folder.json", "ABOUT THIS ARCHIVE.txt"].includes(child.name))
+      } else if (child.isFile() && !["item.json", "folder.json", "ABOUT THIS ARCHIVE.txt"].includes(child.name) && !saving(child.name))
         files.push(file);
     }
   }

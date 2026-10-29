@@ -86,4 +86,35 @@ export async function testReader(app, page, home) {
     if (title === 'modern-reader') await page.screenshot({path: '/private/tmp/obelisk-reader-fixed.png'});
     await page.evaluate(() => document.querySelector('#reader-test').remove());
   }
+
+  // In the viewer, opened from the book's folder, where the page header behind it is
+  // tallest. A window-drag area under the reader would take its toolbar's clicks.
+  await page.locator('.primary-nav [data-view=library]').click();
+  const openBook = async () => {
+    await page.locator('#search').fill('older-reader');
+    await page.getByRole('button', {name: 'Preview older-reader', exact: true}).first().dblclick();
+    await page.locator('#viewer:not([hidden])').waitFor();
+  };
+  await openBook();
+  await page.getByRole('button', {name: 'Open this folder'}).click();
+  await page.locator('#viewer').waitFor({state: 'hidden'});
+  const dragAreas = () => page.evaluate(() => {
+    const preview = document.querySelector('#preview').getBoundingClientRect();
+    return [...document.querySelectorAll('*')].filter((node) => {
+      const box = node.getBoundingClientRect();
+      return getComputedStyle(node).appRegion === 'drag' && box.width && box.height &&
+        box.left < preview.right && box.right > preview.left && box.top < preview.bottom && box.bottom > preview.top;
+    }).map((node) => node.className || node.tagName);
+  });
+  assert.ok(await page.locator('.page-header').first().evaluate((node) => getComputedStyle(node).appRegion === 'drag'), 'the header drags the window while no file is open');
+  await openBook();
+  const viewer = page.frameLocator('#preview > iframe');
+  await viewer.locator('#status').waitFor({state: 'hidden'});
+  assert.deepEqual(await dragAreas(), [], 'nothing over the reader drags the window');
+  await viewer.locator('#chapters').selectOption({label: 'Closing chapter'});
+  await viewer.locator('#position').filter({hasText: '2 / 2'}).waitFor();
+  await viewer.locator('#previous').click();
+  await viewer.locator('#position').filter({hasText: '1 / 2'}).waitFor();
+  await page.locator('#close-inspector').click();
+  await page.locator('#viewer').waitFor({state: 'hidden'});
 }

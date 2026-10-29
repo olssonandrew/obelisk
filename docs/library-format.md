@@ -85,17 +85,27 @@ Also in `.obelisk/`:
 
 ## item.json
 
+An import copies the file in and works out its checksum in the same read. On the same
+APFS drive the copy is a clone, which takes no time or space, and only the checksum
+read remains. A drive that can't clone (Mac OS Extended, exFAT) would have to read
+and write the whole file on one disk, so for files of 1 GB or more already on the
+library's drive, Add asks once for the whole batch whether to move or copy them. Every import goes through Add; only files put in the library folder itself are added without it. A move reads the file once for its
+checksum, then renames it into the library. Progress shows in Transfers.
+
 An import writes the file, then its `item.json` (through a temporary file), then the
 catalog. If the manifest can't be written, the file goes back and nothing is saved; a
 file left without one after a crash shows up in Check archive, ready to add again.
 
 Every manifest has:
 - `schemaVersion: 1`, a stable `id`, `title`, `description`, `filename`, `path`
-- `bytes`, `sha256`, `acquiredAt`
+- `bytes`, `sha256` (null until it's worked out; see Checks), `acquiredAt`
+- `stamp` (`size`, `mtimeMs`, `ino`) and `verifiedAt`: when its contents were last
+  confirmed, and how the file looked then
 - `source`: where it came from
 - `rights`
-- `integrity`: `publisher-verified` when the bytes matched a size and checksum given
-  in advance, otherwise `hashed`
+- `integrity`: `publisher-verified` when the bytes matched a checksum given in advance
+  or carried by the file (a ZIM), `hashed` once its own checksum is recorded, `pending`
+  until then, and `changed` after an edit
 
 Optional fields appear only when set:
 - `tags` (lowercase), `favorite`, `rating` (0–5)
@@ -134,20 +144,53 @@ record named `urn:thumbnail:<address>`.
 
 ## Checks
 
-**Settings → Check files** compares the library with its manifests. It records each
-file's `fileState` and the hash and size it observed:
+A file's contents are read in full once, for its checksum, and after that only on
+purpose. Day to day, a file is known by its `stamp`: its size, modified date and file
+ID, as recorded the last time its contents were confirmed.
+
+**Settings → Check files** compares the library with its manifests, using stamps. It
+takes seconds even on terabytes, and reads a file only when its size or date has
+changed, or to find where it moved: a file moved on the same drive keeps its file ID,
+and only files of the right size are ever read. It records each file's `fileState`:
 - **Moved:** the manifest is updated.
 - **Edited:** the file keeps its original checksum. **Accept current file** keeps up to
   20 earlier checksums, as history, not a backup.
 - **Missing:** stays listed. Nothing is dropped or deleted.
+- **Damaged:** found by Verify contents (below). Stays flagged until the file reads
+  back as it should.
+
+Only manifests whose record changed are written, so a check touches few files.
+
+**Verify contents** reads every file again to catch what a stamp can't show: a drive
+corrupting a file without its size or date changing. A file whose contents differ but
+whose stamp is the one recorded is **damaged**; one whose stamp changed was edited. It
+reads the files confirmed longest ago first, one at a time, in the background, and
+gives way to imports and checks. Each file records `verifiedAt`. A run is
+remembered in `.obelisk/verify.json`, so it carries on after a restart; Pause and Stop
+are in Transfers.
+
+**Checksums worked out after import.** A file moved or cloned in is usable at once,
+with `sha256: null` and `integrity: "pending"`. The background reader works out its
+checksum, then records it with its stamp and `verifiedAt`. A file copied from another
+drive gets its checksum as it's written. A ZIM carries an MD5 of its own contents,
+written by Kiwix; the same read checks it, and a ZIM that matches is marked
+`publisher-verified`, while one that doesn't is marked damaged.
+
+Files from before stamps were kept get one at their next check, without their
+contents being read, and come first in the next Verify contents run.
 
 Limits: checks skip symlinks and app bundles, and stop at 5 million entries or 20
 levels deep.
 
 **Files added by other means.** Files dropped into the folder in Finder or by sync
-have no manifest. A check reports them as not in the library. **Add to library**
-gives each one its own item folder and manifest, and removes the original only if it
-hasn't changed in the meantime.
+have no manifest. One put into a library folder while Obelisk is open is added by
+itself: when the window comes back into focus, Obelisk notices it, waits until its
+size and date stop changing, and moves it into its own item folder in that folder.
+Nothing is copied. Files that were already there when the library opened, ones in a
+folder made outside Obelisk, and ones that couldn't be added are listed on the
+Archive page instead. **Review and add** does the same for those. A package (an
+Apple Books EPUB) is zipped, and the original is removed only if it hasn't changed in
+the meantime.
 
 **Software.** Software items also record platform, architecture, requirements and a
 user-confirmed offline test. A check clears that test if the file has changed.

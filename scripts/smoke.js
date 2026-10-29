@@ -325,13 +325,9 @@ try {
     .click();
   assert.equal(await page.locator("#review-save").innerText(), "Add 2 files");
   await page.locator("#review-save").click();
-  await page.waitForFunction(() =>
-    window.obelisk
-      .state()
-      .then(
-        (s) => s.items.filter((i) => i.tags?.includes("smoke")).length === 2,
-      ),
-  );
+  // The dialog closes at once; the files arrive as they're copied.
+  for (let i = 0; i < 60 && (await state()).items.filter((i) => i.tags?.includes("smoke")).length < 2; i++)
+    await page.waitForTimeout(250);
   assert.ok(
     !(await state()).items.some((i) => i.title === "skip-me"),
     "a removed file is not imported",
@@ -484,11 +480,20 @@ try {
   );
   await page.locator("#archive-picker").click();
 
-  // A file put straight into the archive folder is found and added where it is.
+  // A file put into a library folder while the app is open is added there by itself,
+  // once it has stopped changing. Coming back to the window is when it looks.
   const {archiveRoot} = await state();
-  await mkdir(path.join(archiveRoot, "Images"), {recursive: true});
+  await writeFile(path.join(archiveRoot, "Images", "placed-smoke.txt"), `Placed ${Date.now()}`);
+  await app.evaluate(({BrowserWindow}) => BrowserWindow.getAllWindows()[0].emit("focus"));
+  await page.locator("#toast", {hasText: "Added placed-smoke to Images."}).waitFor({timeout: 15000});
+  const adopted = (await state()).items.find((i) => i.title === "placed-smoke");
+  assert.ok(adopted.path.startsWith("Images/"), "it stays in the folder it was put in");
+  step("adds a file put in a library folder");
+
+  // One in a folder made in Finder (not a library folder yet) waits to be reviewed.
+  await mkdir(path.join(archiveRoot, "Loose"), {recursive: true});
   await writeFile(
-    path.join(archiveRoot, "Images", "stray-smoke.txt"),
+    path.join(archiveRoot, "Loose", "stray-smoke.txt"),
     `Stray ${Date.now()}`,
   );
   await page.locator("#scan-archive").click();

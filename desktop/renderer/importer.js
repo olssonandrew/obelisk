@@ -350,6 +350,12 @@ export function createImporter({
   }
 
   function count() {
+    // Big files on a library drive that can't share storage between copies: moving
+    // them is the fast way in, so it is asked, once for all of them, not assumed.
+    const movable = rows.filter((r) => r.file.movable).length;
+    $("#review-move-label").hidden = $("#review-move-box").hidden = !movable;
+    $("#review-move").required = !!movable;
+    $("#review-move-label").textContent = movable > 1 ? `${movable} files on the library’s drive` : "On the library’s drive";
     const label = `Add ${rows.length} ${rows.length === 1 ? "file" : "files"}`;
     $("#review-title").textContent = label;
     $("#review-save").textContent = label;
@@ -420,6 +426,7 @@ export function createImporter({
       rows.push(row);
     }
     $("#review-tags").value = "";
+    $("#review-move").value = "";
     // When every file is headed to the same folder, say so at the top.
     const same = new Set(rows.map((r) => r.folder.value));
     if (same.size === 1) $("#review-folder").value = [...same][0];
@@ -459,19 +466,26 @@ export function createImporter({
     save.textContent = "Adding…";
     const entries = rows.map((row) => {
       for (const tag of split(row.tagInput.value)) row.tags.add(tag);
-      return { index: row.file.index, title: row.title.value, folderId: row.folder.value, tags: [...row.tags] };
+      return {
+        index: row.file.index,
+        title: row.title.value,
+        folderId: row.folder.value,
+        tags: [...row.tags],
+        move: !!row.file.movable && $("#review-move").value === "move",
+      };
     });
-    const sent = token;
+    const sent = token,
+      bytes = rows.reduce((n, row) => n + (row.file.bytes || 0), 0);
     token = null;
+    // Big files take a while; they carry on in Transfers with the dialog closed.
+    const adding = desktop.commitImport(sent, entries);
+    dialog.close();
+    save.disabled = false;
+    if (bytes > 1e9) toast("Adding. You can follow it in Transfers.");
     try {
-      const results = await desktop.commitImport(sent, entries);
-      dialog.close();
-      await finish(results);
+      await finish(await adding);
     } catch (e) {
-      dialog.close();
       toast(e.message);
-    } finally {
-      save.disabled = false;
     }
   };
 

@@ -7,6 +7,9 @@
   A fast, free, open-source file manager for building and using an offline archive.
 </p>
 <p align="center">
+  <strong>BETA NOTICE:</strong> Obelisk is in beta and needs further community testing before trusting it with important data. If you notice any issues, please submit them via the <a href="https://github.com/olssonandrew/obelisk/issues">Issues page</a>.
+</p>
+<p align="center">
   <a href="../../releases/latest"><img alt="Download for macOS, Windows and Linux" src="https://img.shields.io/badge/Download-macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-6a3fe0?style=for-the-badge" /></a>
 </p>
 <!-- Once the repository is public, show its stars here:
@@ -26,13 +29,11 @@
 
 Get the latest version from **[Releases](../../releases/latest)**:
 
-| System                             | Download                                         | First launch                                                                                                        |
-| ---------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| System                             | Download                                         | First launch                                                                                                                                                                            |
+| ---------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **macOS** (Apple Silicon or Intel) | `Obelisk-mac-arm64.zip` or `Obelisk-mac-x64.zip` | Unzip and move Obelisk to Applications. It isn't signed by a registered developer yet, so the first time, open it, then choose **Open Anyway** in System Settings → Privacy & Security. |
-| **Windows** (experimental)         | `Obelisk-windows-x64.zip`                        | Unzip and run `Obelisk.exe`. If Windows warns you, choose **More info → Run anyway**.                               |
-| **Linux** (experimental)           | `Obelisk-linux-x64.zip`                          | Unzip and run `Obelisk`. If it won't start, run `sudo chown root chrome-sandbox && sudo chmod 4755 chrome-sandbox` in its folder. |
-
-Obelisk is in beta. It's been tested most on Macs with Apple Silicon. Keep a backup of anything important. You can also [run it from source](#run-from-source).
+| **Windows** (experimental)         | `Obelisk-windows-x64.zip`                        | Unzip and run `Obelisk.exe`. If Windows warns you, choose **More info → Run anyway**.                                                                                                   |
+| **Linux** (experimental)           | `Obelisk-linux-x64.zip`                          | Unzip and run `Obelisk`. If it won't start, run `sudo chown root chrome-sandbox && sudo chmod 4755 chrome-sandbox` in its folder.                                                       |
 
 ## Why Obelisk
 

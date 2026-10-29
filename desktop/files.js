@@ -53,7 +53,7 @@ export async function fileResponse(
     zimReader
       ? "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' obelisk://zim; img-src obelisk://zim data:; font-src obelisk://zim data:; media-src obelisk://zim; connect-src obelisk://zim; frame-src 'self'; object-src 'none'; base-uri obelisk://zim; form-action 'none'"
       : trusted
-        ? "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' obelisk://archive obelisk://thumb data: blob: https://tile.openstreetmap.org; media-src obelisk://archive blob:; connect-src 'self' obelisk://archive obelisk://zim blob: https://build.protomaps.com https://tile.openstreetmap.org; worker-src 'self' blob:; frame-src 'self' obelisk://archive; object-src obelisk://archive; base-uri 'none'"
+        ? "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' obelisk://archive obelisk://thumb data: blob: https://tiles.openfreemap.org; media-src obelisk://archive blob:; connect-src 'self' obelisk://archive obelisk://zim blob: https://build.protomaps.com https://tiles.openfreemap.org; worker-src 'self' blob:; frame-src 'self' obelisk://archive; object-src obelisk://archive; base-uri 'none'"
         : "sandbox; default-src 'none'; style-src 'unsafe-inline'",
   );
   let start = 0,

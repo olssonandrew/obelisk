@@ -13,16 +13,14 @@ import {
   mkdir,
   realpath,
   stat,
-  copyFile,
   rm,
   readFile,
   writeFile,
 } from "node:fs/promises";
 import { sourceDate, fileDate } from "./dates.js";
 import { createHash, randomUUID } from "node:crypto";
-import { constants as fsConstants } from "node:fs";
 import { openCatalog, syncCatalog } from "./catalog.js";
-import { importFile, fileTarget } from "./archive.js";
+import { importFile, fileTarget, copyIn, canClone, readChecksums, Stopped, stampOf, sameStamp, writeJson, OUTSIDE } from "./archive.js";
 import { packageOf, packageSize, zipPackage } from "./bundle.js";
 import { openFolders } from "./folders.js";
 import { createDownloads } from "./downloads.js";
@@ -96,7 +94,15 @@ export async function openLibrary(
     // Files in the folder that are not in the library, as paths relative to the root.
     untracked = [],
     looking = null,
-    dating = null;
+    dating = null,
+    // Untracked files seen when the library opened (those wait for Review and add),
+    // and each newer one's size and date at the last look.
+    known = null,
+    adopting = false,
+    again = null;
+  const settling = new Map(),
+    // Downloads other apps haven't finished.
+    unfinished = /\.(crdownload|part|partial|download|tmp)$/i;
   // Anyone showing this library is told when anything in it changes, instead of asking.
   const listeners = new Set();
   const changed = () => {
@@ -256,6 +262,8 @@ export async function openLibrary(
           const before = untracked.join("\n");
           untracked = found;
           if (before !== found.join("\n")) changed();
+          if (known) void adopt(found);
+          else known = new Set(found);
         })
         .catch((e) => console.warn("Could not look for new files:", e.message))
         .finally(() => (looking = null));
@@ -293,6 +301,364 @@ export async function openLibrary(
       const info = await stat(filename);
       if (!info.isFile()) throw new Error("This is not a file.");
       return { item, filename, info };
+    }
+    /**
+     * What importing these paths would do, without copying anything: every file
+     * found (folders are walked), where it would be filed, and a starting title.
+     */
+    async function previewPaths(paths, options = {}) {
+      if (options.type && !shelfOf(options.type))
+        throw new Error("Unknown file category.");
+      if (options.kind && !hasKind(options.type || options.fallback, options.kind))
+        throw new Error("Unknown kind for this category.");
+      const found = [],
+        limit = options.limit || 200,
+        // A big file on the library's own drive, where copies can't share storage, may
+        // be moved in instead: copying it there takes a long time and doubles its space.
+        drive = (await stat(archiveRoot)).dev,
+        clones = await canClone(archiveRoot);
+      async function add(file, relative = "", depth = 0) {
+        if (depth > 20 || found.length >= limit)
+          throw new Error(`Choose at most ${limit} files, up to 20 folders deep.`);
+        const info = await lstat(file);
+        if (info.isSymbolicLink()) return;
+        if (info.isDirectory()) {
+          if (file.endsWith(".app"))
+            throw new Error("Save applications as a ZIP or installer.");
+          // A folder macOS shows as one file (an Apple Books EPUB, a Pages document)
+          // is kept as one file.
+          const bundle = packageOf(file);
+          if (bundle) {
+            found.push({
+              file,
+              name: bundle.name,
+              bundle: bundle.format,
+              relative: relative ? relative.split(path.sep).join("/") : "",
+              bytes: await packageSize(file),
+              title: path.basename(file).replace(/\.[^.]+$/, ""),
+              ...fileTarget(bundle.name, options),
+            });
+            return;
+          }
+          for (const child of await readdir(file, { withFileTypes: true })) {
+            if (child.name.startsWith(".")) continue;
+            await add(path.join(file, child.name), path.join(relative, path.basename(file)), depth + 1);
+          }
+        } else if (info.isFile()) {
+          const name = path.basename(file);
+          found.push({
+            file,
+            name,
+            relative: relative ? relative.split(path.sep).join("/") : "",
+            bytes: info.size,
+            ...(info.dev === drive && !clones && info.size >= 1e9 && !file.startsWith(archiveRoot + path.sep) ? { movable: true } : {}),
+            title: name.replace(/\.[^.]+$/, "") || name,
+            ...fileTarget(name, options),
+          });
+        }
+      }
+      if (!Array.isArray(paths) || paths.length > limit)
+        throw new Error(`Choose up to ${limit} files.`);
+      for (const file of paths) await add(file);
+      return found;
+    }
+    // Imports under way and the last few finished, shown in Transfers.
+    const imports = new Map();
+    let toldAt = 0;
+    const importing = () => [...imports.values()].some((task) => !["complete", "failed"].includes(task.phase));
+    function progressOf(task) {
+      return (done, phase) => {
+        task.done = done;
+        task.phase = phase;
+        // A big file reports every few megabytes; the window needs a few updates a second.
+        if (Date.now() - toldAt > 250) {
+          toldAt = Date.now();
+          changed();
+        }
+      };
+    }
+    function finishTask(task, result) {
+      if (result.error) Object.assign(task, { phase: "failed", error: result.error });
+      else Object.assign(task, { phase: "complete", done: task.bytes, itemId: result.item.id });
+      const finished = [...imports.values()].filter((t) => ["complete", "failed"].includes(t.phase));
+      for (const old of finished.slice(0, -20)) imports.delete(old.id);
+      changed();
+    }
+    /** Copies previewed files in, each with its own shelf, kind, title and tags. */
+    async function importEntries(entries) {
+      if (checking) throw new Error("Wait for the archive check.");
+      pending++;
+      const tasks = entries.map((entry) => {
+        const task = {
+          id: randomUUID(),
+          title: entry.title || entry.name || path.basename(entry.file),
+          bytes: entry.bytes || 0,
+          done: 0,
+          phase: "waiting",
+          ...(entry.auto ? { auto: true } : {}),
+        };
+        imports.set(task.id, task);
+        return task;
+      });
+      changed();
+      try {
+        const results = [];
+        for (const [index, entry] of entries.entries()) {
+          const task = tasks[index],
+            progress = progressOf(task),
+            // A file already in the library folder is moved into its own item folder
+            // rather than copied, as is one someone chose to move in; a package is
+            // zipped, and the original removed after.
+            moving = (entry.inPlace && !entry.bundle) || (entry.move && entry.movable),
+            temporaryPath = moving ? entry.file : path.join(stateRoot, "downloads", `${randomUUID()}.import`);
+          let result;
+          try {
+            const before = entry.inPlace && entry.bundle && (await fingerprint(entry.file));
+            // A copy from another drive is checksummed as it is written. A moved,
+            // cloned or zipped file is usable at once; its checksum is read after.
+            let sums = { sha256: null, embedded: null };
+            if (moving) {
+              if (entry.inPlace && !(await realpath(entry.file)).startsWith(archiveRoot + path.sep))
+                throw new Error("File is outside this archive.");
+            } else {
+              await mkdir(path.dirname(temporaryPath), { recursive: true });
+              if (entry.bundle) {
+                progress(0, "copying");
+                await zipPackage(entry.file, temporaryPath, entry.bundle);
+              } else sums = await copyIn(entry.file, temporaryPath, progress);
+            }
+            // Its chosen folder, else the folder its format usually goes to, else Inbox.
+            const group = entry.type || classify(entry.name || entry.file).type,
+              folderId = (entry.folderId && folders.get(entry.folderId) && entry.folderId) || folders.destination(`files:${group}`) || folders.inbox;
+            result = await importFile({
+              directory: folders.dirOf(folderId),
+              catalog,
+              archiveRoot,
+              temporaryPath,
+              ...sums,
+              pending: !sums.sha256,
+              filename: entry.name || path.basename(entry.file),
+              type: entry.type,
+              kind: entry.kind,
+              software: entry.type === "software" ? { platform: "unknown", arch: "unknown", offlineTested: false } : undefined,
+              title: entry.title || path.basename(entry.file),
+              source: { adapter: "import", provider: "Local import", ...(entry.relative ? { folder: entry.relative } : {}) },
+            });
+            if (!result.duplicate && entry.tags?.length) await editTags([result.item.id], entry.tags, "add");
+            if (entry.inPlace && !result.duplicate) {
+              // A package's original goes only if it is still the version that was imported.
+              const gone = moving || (await fingerprint(entry.file).catch(() => null)) === before;
+              if (entry.bundle && gone) await rm(entry.file, { force: true, recursive: true });
+              if (gone) {
+                const relative = path.relative(archiveRoot, entry.file).split(path.sep).join("/");
+                untracked = untracked.filter((f) => f !== relative);
+                if (lastCheck) lastCheck.untracked = lastCheck.untracked.filter((f) => f !== relative);
+              }
+            }
+          } catch (e) {
+            result = { filename: entry.name || path.basename(entry.file), error: e.message };
+          } finally {
+            if (!moving) await rm(temporaryPath, { force: true });
+          }
+          if (result.item?.integrity === "pending") readSoon();
+          finishTask(task, result);
+          results.push(result);
+        }
+        return results;
+      } finally {
+        pending--;
+      }
+    }
+    // One file is read at a time, in the background: first to work out checksums for
+    // files moved or cloned in without one, then, during a Verify contents run, to
+    // re-read the files confirmed longest ago. Nothing waits on it, and it gives way to
+    // imports and checks. A run is remembered, so it carries on after a restart.
+    const verifyFile = path.join(stateRoot, "verify.json");
+    let reader = null,
+      readPaused = false,
+      reading = null,
+      verifyRun = null,
+      readToldAt = 0;
+    // Files that changed while being read, or couldn't be: tried again next session.
+    const skipped = new Set();
+    try {
+      verifyRun = JSON.parse(await readFile(verifyFile, "utf8"));
+    } catch {}
+    const readable = () =>
+      catalog.list().filter((i) => !i.placeholder && i.path && !["missing", "ambiguous"].includes(i.fileState));
+    function nextToRead() {
+      const usable = readable().filter((i) => !skipped.has(i.id)),
+        fresh = usable.find((i) => !i.sha256);
+      if (fresh) return { item: fresh, verify: false };
+      if (!verifyRun) return null;
+      let oldest = null;
+      for (const i of usable)
+        if (!(i.verifiedAt >= verifyRun.startedAt) && (!oldest || (i.verifiedAt || "") < (oldest.verifiedAt || ""))) oldest = i;
+      return oldest && { item: oldest, verify: true };
+    }
+    function readSoon() {
+      if (closed || readPaused) return reader;
+      reader ||= readAll()
+        .catch((e) => console.warn("Could not read files:", e.message))
+        .finally(() => {
+          reader = reading = null;
+          changed();
+        });
+      return reader;
+    }
+    async function readAll() {
+      await settled;
+      while (!closed && !readPaused) {
+        // Two reads at once would slow both down.
+        if (checking || importing()) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          continue;
+        }
+        const next = nextToRead();
+        if (!next) break;
+        await readOne(next);
+      }
+      if (verifyRun && !closed && !readPaused && !nextToRead()) {
+        verifyRun = null;
+        await rm(verifyFile, { force: true }).catch(() => {});
+      }
+    }
+    async function readOne({ item, verify }) {
+      let file;
+      try {
+        file = await realpath(path.resolve(archiveRoot, item.path));
+        if (!file.startsWith(archiveRoot + path.sep)) throw new Error(OUTSIDE);
+      } catch {
+        skipped.add(item.id);
+        return;
+      }
+      const before = await stat(file);
+      reading = { id: item.id, title: item.title, bytes: before.size, done: 0, verify };
+      changed();
+      let sums;
+      try {
+        sums = await readChecksums(
+          file,
+          (done) => {
+            reading.done = done;
+            if (Date.now() - readToldAt > 250) {
+              readToldAt = Date.now();
+              changed();
+            }
+          },
+          () => closed || readPaused,
+        );
+      } catch (e) {
+        // Paused or closed: read again from the start when it carries on.
+        if (!(e instanceof Stopped)) skipped.add(item.id);
+        return;
+      }
+      const after = await stat(file).catch(() => null),
+        current = catalog.get(item.id);
+      // Moved with its folder while it was read: read again where it is now.
+      if (current && current.path !== item.path) return;
+      if (!current || !after || !sameStamp(stampOf(before), after)) {
+        skipped.add(item.id);
+        return;
+      }
+      const now = new Date().toISOString(),
+        stamp = stampOf(after);
+      let patch;
+      if (!current.sha256)
+        patch = {
+          sha256: sums.sha256,
+          integrity: sums.embedded ? "publisher-verified" : "hashed",
+          ...(sums.embedded === false ? { fileState: "damaged" } : {}),
+          stamp,
+          verifiedAt: now,
+        };
+      else if (sums.sha256 === current.sha256)
+        // Unchanged. A ZIM that fails its own checksum was damaged before it arrived.
+        patch = { stamp, verifiedAt: now, fileState: sums.embedded === false ? "damaged" : current.fileState === "damaged" ? "ok" : current.fileState || "ok" };
+      // Different contents. With the size and date it had when last confirmed, nothing
+      // saved over it, so the drive damaged it; otherwise someone changed it.
+      else if (sameStamp(current.stamp, after)) patch = { fileState: "damaged", observedSha256: sums.sha256, verifiedAt: now };
+      else patch = { fileState: "modified", integrity: "changed", observedSha256: sums.sha256, observedBytes: after.size, verifiedAt: now };
+      pending++;
+      try {
+        await editMetadata([item.id], (latest) => ({ ...latest, ...patch }), { edited: false });
+      } catch {
+        skipped.add(item.id);
+      } finally {
+        pending--;
+        reading = null;
+        changed();
+      }
+    }
+    // What was left unread when it last closed carries on once it has opened.
+    void settled.then(() => readSoon());
+    // Files put into the library folder while it is open are added where they were
+    // put, once they have stopped changing. Those already there when it opened wait
+    // for Review and add, and so does anything that couldn't be added.
+    async function adopt(found) {
+      if (adopting || closed) return;
+      adopting = true;
+      try {
+        const ready = new Map();
+        let waiting = false;
+        for (const relative of found) {
+          if (known.has(relative) || unfinished.test(relative)) continue;
+          const dir = path.posix.dirname(relative),
+            // A folder made in Finder isn't one of the library's folders until it reopens.
+            folderId = dir === "." ? folders.inbox : folders.list().find((f) => f.dir === dir)?.id;
+          if (!folderId) continue;
+          let info;
+          try {
+            info = await lstat(path.join(archiveRoot, relative));
+          } catch {
+            settling.delete(relative);
+            continue;
+          }
+          // Unchanged since the last look, a few seconds ago: no longer being copied in.
+          const mark = `${info.size}:${info.mtimeMs}`;
+          if (settling.get(relative) !== mark || checking || pending) {
+            settling.set(relative, mark);
+            waiting = true;
+          } else ready.set(path.join(archiveRoot, relative), { relative, folderId });
+        }
+        if (ready.size) {
+          for (const { relative } of ready.values()) {
+            known.add(relative);
+            settling.delete(relative);
+          }
+          const listed = await previewPaths([...ready.keys()], { limit: 1000 });
+          await importEntries(listed.map((file) => ({ ...file, inPlace: true, auto: true, folderId: ready.get(file.file)?.folderId })));
+        }
+        if (waiting && !closed) {
+          clearTimeout(again);
+          again = setTimeout(() => void lookForUntracked(), 3000);
+          again.unref?.();
+        }
+      } catch (e) {
+        console.warn("Could not add new files:", e.message);
+      } finally {
+        adopting = false;
+      }
+    }
+    /** What the background reader is doing, and how much of the library is confirmed. */
+    function readingState() {
+      const all = readable(),
+        oldest = all.reduce((at, i) => (i.verifiedAt && (!at || i.verifiedAt < at) ? i.verifiedAt : at), null);
+      return {
+        current: reading,
+        paused: readPaused,
+        waiting: all.filter((i) => !i.sha256).length,
+        verified: all.filter((i) => i.verifiedAt).length,
+        total: all.length,
+        oldest,
+        damaged: all.filter((i) => i.fileState === "damaged").length,
+        run: verifyRun && {
+          startedAt: verifyRun.startedAt,
+          done: all.filter((i) => i.verifiedAt >= verifyRun.startedAt).length,
+          bytes: all.reduce((n, i) => n + (i.bytes || 0), 0),
+          read: all.reduce((n, i) => n + (i.verifiedAt >= verifyRun.startedAt ? i.bytes || 0 : 0), 0),
+        },
+      };
     }
     /** Which entries of each collection this library holds, by entry key. */
     function savedEntries() {
@@ -513,20 +879,11 @@ export async function openLibrary(
         }
       },
       async check() {
-        if (
-          checking ||
-          pending ||
-          catalog
-            .jobs()
-            .some((j) =>
-              ["queued", "downloading", "verifying", "pausing"].includes(
-                j.status,
-              ),
-            )
-        )
-          throw new Error(
-            "Wait for transfers and imports to finish before checking.",
-          );
+        if (checking) throw new Error("Wait for the archive check.");
+        if (importing()) throw new Error("Wait for imports to finish before checking. They're in Transfers.");
+        if (catalog.jobs().some((j) => ["queued", "downloading", "verifying", "pausing"].includes(j.status)))
+          throw new Error("Wait for transfers to finish before checking.");
+        if (pending) throw new Error("Wait for the current change to finish before checking.");
         checking = true;
         changed();
         try {
@@ -610,6 +967,8 @@ export async function openLibrary(
         inbox: folders.inbox,
         destinations: folders.destinations(),
         jobs: catalog.jobs(),
+        imports: [...imports.values()],
+        reading: readingState(),
         platform: process.platform,
         arch: process.arch,
       }),
@@ -623,116 +982,41 @@ export async function openLibrary(
           throw new Error("This format does not have a text preview.");
         return readFile(filename, "utf8");
       },
-      /**
-       * Copies files in. Each is filed by what it is unless `options.type` names
-       * a shelf. Folders are walked; where a file sat is kept as `source.folder`.
-       */
-      /**
-       * What importing these paths would do, without copying anything: every file
-       * found (folders are walked), where it would be filed, and a starting title.
-       */
-      async previewPaths(paths, options = {}) {
-        if (options.type && !shelfOf(options.type))
-          throw new Error("Unknown file category.");
-        if (options.kind && !hasKind(options.type || options.fallback, options.kind))
-          throw new Error("Unknown kind for this category.");
-        const found = [],
-          limit = options.limit || 200;
-        async function add(file, relative = "", depth = 0) {
-          if (depth > 20 || found.length >= limit)
-            throw new Error(`Choose at most ${limit} files, up to 20 folders deep.`);
-          const info = await lstat(file);
-          if (info.isSymbolicLink()) return;
-          if (info.isDirectory()) {
-            if (file.endsWith(".app"))
-              throw new Error("Save applications as a ZIP or installer.");
-            // A folder macOS shows as one file (an Apple Books EPUB, a Pages document)
-            // is kept as one file.
-            const bundle = packageOf(file);
-            if (bundle) {
-              found.push({
-                file,
-                name: bundle.name,
-                bundle: bundle.format,
-                relative: relative ? relative.split(path.sep).join("/") : "",
-                bytes: await packageSize(file),
-                title: path.basename(file).replace(/\.[^.]+$/, ""),
-                ...fileTarget(bundle.name, options),
-              });
-              return;
-            }
-            for (const child of await readdir(file, { withFileTypes: true })) {
-              if (child.name.startsWith(".")) continue;
-              await add(path.join(file, child.name), path.join(relative, path.basename(file)), depth + 1);
-            }
-          } else if (info.isFile()) {
-            const name = path.basename(file);
-            found.push({
-              file,
-              name,
-              relative: relative ? relative.split(path.sep).join("/") : "",
-              bytes: info.size,
-              title: name.replace(/\.[^.]+$/, "") || name,
-              ...fileTarget(name, options),
-            });
+      previewPaths,
+      importEntries,
+      /** The background reader: pause and resume it, start or stop a Verify contents run. */
+      reading: {
+        pause() {
+          readPaused = true;
+          changed();
+        },
+        resume() {
+          readPaused = false;
+          skipped.clear();
+          readSoon();
+          changed();
+        },
+        async verify() {
+          if (!verifyRun) {
+            verifyRun = { startedAt: new Date().toISOString() };
+            await writeJson(verifyFile, verifyRun);
           }
-        }
-        if (!Array.isArray(paths) || paths.length > limit)
-          throw new Error(`Choose up to ${limit} files.`);
-        for (const file of paths) await add(file);
-        return found;
+          readPaused = false;
+          readSoon();
+          changed();
+        },
+        async stopVerify() {
+          verifyRun = null;
+          await rm(verifyFile, { force: true });
+          changed();
+        },
+        /** Resolves once there is nothing left to read for now. */
+        idle: () => readSoon() || Promise.resolve(),
       },
-      /** Copies previewed files in, each with its own shelf, kind, title and tags. */
-      async importEntries(entries) {
-        if (checking) throw new Error("Wait for the archive check.");
-        pending++;
-        try {
-          const results = [];
-          for (const entry of entries) {
-            const temporaryPath = path.join(stateRoot, "downloads", `${randomUUID()}.import`);
-            try {
-              await mkdir(path.dirname(temporaryPath), { recursive: true });
-              // A file already inside the archive is cloned (instant on APFS) and then
-              // removed, so it ends up in its own folder rather than copied twice.
-              const before = entry.inPlace && (await fingerprint(entry.file));
-              if (entry.bundle) await zipPackage(entry.file, temporaryPath, entry.bundle);
-              else await copyFile(entry.file, temporaryPath, entry.inPlace ? fsConstants.COPYFILE_FICLONE : 0);
-              // Its chosen folder, else the folder its format usually goes to, else Inbox.
-              const group = entry.type || classify(entry.name || entry.file).type,
-                folderId = (entry.folderId && folders.get(entry.folderId) && entry.folderId) || folders.destination(`files:${group}`) || folders.inbox;
-              const result = await importFile({
-                directory: folders.dirOf(folderId),
-                catalog,
-                archiveRoot,
-                temporaryPath,
-                filename: entry.name || path.basename(entry.file),
-                type: entry.type,
-                kind: entry.kind,
-                software: entry.type === "software" ? { platform: "unknown", arch: "unknown", offlineTested: false } : undefined,
-                title: entry.title || path.basename(entry.file),
-                source: { adapter: "import", provider: "Local import", ...(entry.relative ? { folder: entry.relative } : {}) },
-              });
-              if (!result.duplicate && entry.tags?.length) await editTags([result.item.id], entry.tags, "add");
-              // The original goes only if it is still the version that was imported.
-              const after = before && (await fingerprint(entry.file).catch(() => null));
-              const unchanged = !before || after === before;
-              if (entry.inPlace && !result.duplicate && unchanged) {
-                await rm(entry.file, { force: true, recursive: !!entry.bundle });
-                const relative = path.relative(archiveRoot, entry.file).split(path.sep).join("/");
-                untracked = untracked.filter((f) => f !== relative);
-                if (lastCheck) lastCheck.untracked = lastCheck.untracked.filter((f) => f !== relative);
-              }
-              results.push(result);
-            } catch (e) {
-              results.push({ filename: entry.name || path.basename(entry.file), error: e.message });
-            } finally {
-              await rm(temporaryPath, { force: true });
-            }
-          }
-          return results;
-        } finally {
-          pending--;
-        }
+      /** Forgets finished imports, as Clear does for finished downloads. */
+      clearImports() {
+        for (const task of imports.values()) if (["complete", "failed"].includes(task.phase)) imports.delete(task.id);
+        changed();
       },
       /**
        * Files the last check found inside the archive folder but not in the library,
@@ -756,7 +1040,7 @@ export async function openLibrary(
       },
       async importPaths(paths, options = {}) {
         if (checking) throw new Error("Wait for the archive check.");
-        return this.importEntries(await this.previewPaths(paths, options));
+        return importEntries(await previewPaths(paths, options));
       },
       /**
        * Refiles items on another shelf. An item folder that holds only the file
@@ -809,6 +1093,8 @@ export async function openLibrary(
       async close() {
         closed = true;
         listeners.clear();
+        clearTimeout(again);
+        await reader;
         await looking;
         await dating;
         await indexing;

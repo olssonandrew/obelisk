@@ -46,7 +46,7 @@ standalone releases contain GPLv3+ parts; FFmpeg's license depends on the build.
 
 | Service | Used for | Terms |
 |---|---|---|
-| OpenStreetMap tiles | The map chooser's preview only | [Tile usage policy](https://operations.osmfoundation.org/policies/tiles/): visible tiles only, attributed, no bulk download |
+| OpenFreeMap | The map chooser's street preview only | [OpenFreeMap](https://openfreemap.org/): free, no key; attribution "OpenFreeMap © OpenMapTiles, data from OpenStreetMap". OpenStreetMap's own tile servers refuse app pages that have no web address. |
 | Protomaps builds | Saved maps | Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL; [data attribution](https://github.com/protomaps/basemaps/blob/main/LICENSE_DATA.md) |
 | Kiwix catalog | Wikipedia and other ZIM editions | Content keeps its own license (Wikipedia: CC BY-SA) |
 | Apple podcast directory, publisher feeds | Podcast search and episodes | Publisher rights apply |

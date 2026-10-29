@@ -102,7 +102,7 @@ export function initSources({ api, el, size, toast, onQueued }) {
       </form>
     </div>
     <div class="source-context"><span id="maps-notice" role="status"></span><button id="maps-refresh" class="text-button"><i data-icon="refresh"></i>Check for newer map data</button></div>
-    <details class="source-details"><summary>What you get</summary><p>One PMTiles file on the Maps shelf holding roads, street and place names, water, parks and buildings for the framed area, from OpenStreetMap as packaged by Protomaps. It opens in the map viewer here alongside every other map you have saved, and other PMTiles tools can read it. The street picture on this page is a live preview from openstreetmap.org and is not what is saved. Satellite imagery, routing and address search are not included. A paused map download starts again from the beginning.</p></details>`;
+    <details class="source-details"><summary>What you get</summary><p>One PMTiles file on the Maps shelf holding roads, street and place names, water, parks and buildings for the framed area, from OpenStreetMap as packaged by Protomaps. It opens in the map viewer here alongside every other map you have saved, and other PMTiles tools can read it. The street picture on this page is a live preview from OpenFreeMap and is not what is saved. Satellite imagery, routing and address search are not included. A paused map download starts again from the beginning.</p></details>`;
 
   function savedShows() {
     $("#saved-shows").replaceChildren();

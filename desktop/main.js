@@ -314,8 +314,8 @@ async function chooseImportPaths(options = {}) {
   const result = await dialog.showOpenDialog(window, {
     title: label ? `Add to ${label}` : "Add to library",
     message: label
-      ? `Copies will be filed under ${label}. Original files stay in place.`
-      : "Copies are filed by type. Original files stay in place.",
+      ? `Files will be filed under ${label}.`
+      : "Files are filed by type.",
     // The shelf's usual formats come first, but anything may be filed there.
     ...(extensions.length
       ? {
@@ -337,10 +337,6 @@ async function chooseImportPaths(options = {}) {
     ],
   });
   return result.canceled ? [] : result.filePaths;
-}
-async function importFiles(options = {}) {
-  const paths = await chooseImportPaths(options);
-  return paths.length ? library.importPaths(paths, options) : [];
 }
 /*
  * Importing is two steps. The files are listed first (nothing copied), the person
@@ -365,7 +361,7 @@ async function listImport(paths, options = {}, found) {
   while (pendingImports.size > 20) pendingImports.delete(pendingImports.keys().next().value);
   return {
     token,
-    files: files.map(({ name, relative, bytes, title, type, kind, folderId }, index) => ({ index, name, relative, bytes, title, type, kind, folderId })),
+    files: files.map(({ name, relative, bytes, title, type, kind, folderId, movable }, index) => ({ index, name, relative, bytes, title, type, kind, folderId, movable })),
   };
 }
 const thumbnails = thumbnailStore(
@@ -473,6 +469,10 @@ function wireIPC() {
     return library.removeItems(ids, (target) => shell.trashItem(target));
   });
   handle("library:check", () => library.check());
+  handle("reading:action", (action) => {
+    if (!["pause", "resume", "verify", "stopVerify"].includes(action)) throw new Error("Unknown action.");
+    return library.reading[action]();
+  });
   handle("library:accept", (id) => library.accept(id));
   handle("software:notes", (id, notes) => library.saveSoftwareNotes(id, notes));
   handle("software:download", (id, platform, arch) =>
@@ -514,7 +514,6 @@ function wireIPC() {
   });
   // Exploring the demo also counts as having seen setup.
   handle("setup:finish", () => saveSettings({ onboarded: true }));
-  handle("library:import", importFiles);
   handle("import:choose", async (options = {}) => {
     const paths = await chooseImportPaths(options);
     return paths.length ? listImport(paths, options) : null;
@@ -536,7 +535,8 @@ function wireIPC() {
         title = String(entry.title || file.title).trim().slice(0, 200) || file.title,
         tags = Array.isArray(entry.tags) ? entry.tags.filter((t) => typeof t === "string").slice(0, 50) : [];
       const folderId = typeof entry.folderId === "string" ? entry.folderId : file.folderId;
-      return { ...file, type: shelf, kind, title, tags, folderId };
+      // Only a file the listing found movable can be moved; anything else is copied.
+      return { ...file, type: shelf, kind, title, tags, folderId, move: entry.move === true && !!file.movable };
     });
     return library.importEntries(chosen);
   });
@@ -553,24 +553,6 @@ function wireIPC() {
         folder = state.folders.find((f) => f.dir === dir);
       return { ...file, inPlace: true, folderId: folder?.id || state.inbox };
     }));
-  });
-  handle("library:drop", async (paths, options = {}) => {
-    if (
-      !Array.isArray(paths) ||
-      !paths.length ||
-      paths.length > 200 ||
-      paths.some((p) => typeof p !== "string")
-    )
-      throw new Error("Drop up to 200 files.");
-    const answer = await dialog.showMessageBox(window, {
-      type: "question",
-      message: `Add ${paths.length} file${paths.length === 1 ? "" : "s"}?`,
-      detail: `Files will be copied into ${library.archiveRoot}. Originals are kept.`,
-      buttons: ["Add", "Cancel"],
-      defaultId: 0,
-      cancelId: 1,
-    });
-    return answer.response === 0 ? library.importPaths(paths, options) : [];
   });
   handle("library:reveal", async (id) => {
     if (id === undefined) {
@@ -649,7 +631,10 @@ function wireIPC() {
   handle("web:info", (id) => webArchive.info(id));
   handle("web:thumbnail", (id) => webArchive.thumbnail(id));
   handle("download:action", (id, action) => {
-    if (action === "clear") return library.downloads.clearFinished();
+    if (action === "clear") {
+      library.clearImports();
+      return library.downloads.clearFinished();
+    }
     if (!["pause", "resume", "cancel"].includes(action))
       throw new Error("Unknown transfer action.");
     return library.downloads[action](id);
@@ -831,7 +816,7 @@ else {
           origin === "obelisk://app",
       );
       session.defaultSession.webRequest.onBeforeSendHeaders(
-        { urls: ["https://tile.openstreetmap.org/*"] },
+        { urls: ["https://tiles.openfreemap.org/*"] },
         (details, callback) => {
           details.requestHeaders["User-Agent"] = USER_AGENT;
           callback({ requestHeaders: details.requestHeaders });

@@ -1,7 +1,7 @@
 /* Choosing an area to save: move and zoom the map until the frame holds it, and
    drag the frame's edges or corners for a different shape.
-   Streets come from OpenStreetMap's public tiles as a preview only; with no
-   connection the bundled world outline is still enough to aim with. */
+   Streets come from OpenFreeMap as a preview only; with no connection the bundled
+   world outline is still enough to aim with. */
 (() => {
   const frame = document.querySelector("#frame"),
     measure = document.querySelector("#measure"),
@@ -13,6 +13,28 @@
   try {
     last = JSON.parse(localStorage.getItem("mapPlannerView") || "null");
   } catch {}
+  // Areas already saved, so a new one can sit beside them or deliberately overlap.
+  // Kept here too, since a change of street style replaces the map's sources.
+  let saved = empty,
+    names = empty;
+  const ours = () => ({
+    sources: { saved: { type: "geojson", data: saved }, names: { type: "geojson", data: names } },
+    layers: [
+      { id: "saved-fill", type: "fill", source: "saved", paint: { "fill-color": accent, "fill-opacity": 0.14 } },
+      { id: "saved-line", type: "line", source: "saved", paint: { "line-color": accent, "line-width": 1.5, "line-dasharray": [3, 2] } },
+      { id: "saved-name", type: "symbol", source: "names", layout: { "text-field": ["get", "title"], "text-size": 11, "text-max-width": 9, "text-font": ["Noto Sans Bold"] }, paint: { "text-color": "#4a22b8", "text-halo-color": "#ffffff", "text-halo-width": 2 } },
+    ],
+  });
+  const outline = () => ({
+    version: 8,
+    sources: { world: { type: "geojson", data: "world.json" }, ...ours().sources },
+    layers: [
+      { id: "ocean", type: "background", paint: { "background-color": atlas.dark() ? "#101a33" : "#dfe8ee" } },
+      { id: "land", type: "fill", source: "world", paint: { "fill-color": atlas.dark() ? "#1b1823" : "#f8f7f2" } },
+      { id: "borders", type: "line", source: "world", paint: { "line-color": atlas.dark() ? "#423b52" : "#b8b8b0", "line-width": 0.65 } },
+      ...ours().layers,
+    ],
+  });
   const map = new maplibregl.Map({
     container: "map",
     center: Array.isArray(last?.center) ? last.center : [8, 30],
@@ -22,30 +44,48 @@
     attributionControl: false,
     dragRotate: false,
     pitchWithRotate: false,
-    style: {
-      version: 8,
-      sources: {
-        world: { type: "geojson", data: "world.json" },
-        streets: { type: "raster", tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 19 },
-        saved: { type: "geojson", data: empty },
-        names: { type: "geojson", data: empty },
-      },
-      layers: [
-        { id: "ocean", type: "background", paint: { "background-color": atlas.dark() ? "#101a33" : "#dfe8ee" } },
-        { id: "land", type: "fill", source: "world", paint: { "fill-color": atlas.dark() ? "#1b1823" : "#f8f7f2" } },
-        { id: "borders", type: "line", source: "world", paint: { "line-color": atlas.dark() ? "#423b52" : "#b8b8b0", "line-width": 0.65 } },
-        { id: "streets", type: "raster", source: "streets", paint: { "raster-fade-duration": 0 } },
-        // Areas already saved, so a new one can sit beside them or deliberately overlap.
-        { id: "saved-fill", type: "fill", source: "saved", paint: { "fill-color": accent, "fill-opacity": 0.14 } },
-        { id: "saved-line", type: "line", source: "saved", paint: { "line-color": accent, "line-width": 1.5, "line-dasharray": [3, 2] } },
-        { id: "saved-name", type: "symbol", source: "names", layout: { "text-field": ["get", "title"], "text-size": 11, "text-max-width": 9, "text-font": ["Noto Sans Medium"] }, paint: { "text-color": "#4a22b8", "text-halo-color": "#ffffff", "text-halo-width": 2 } },
-      ],
-    },
+    style: outline(),
+  });
+  let warned = false;
+  const warn = () => {
+    if (warned) return;
+    warned = true;
+    notice.textContent = "No connection for the street preview. The outline is still enough to choose an area.";
+  };
+  /* OpenFreeMap serves OpenStreetMap data to apps with no key or account.
+     OpenStreetMap's own tile servers refuse requests from a page like this one. */
+  let streets = false,
+    asked = 0;
+  async function showStreets() {
+    const theme = atlas.dark() ? "dark" : "positron",
+      ask = ++asked;
+    try {
+      const response = await fetch(`https://tiles.openfreemap.org/styles/${theme}`, { signal: AbortSignal.timeout(15000) });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const style = await response.json();
+      // A later request, after a change of theme, takes over.
+      if (ask !== asked) return;
+      const own = ours();
+      map.setStyle({ ...style, sources: { ...style.sources, ...own.sources }, layers: [...style.layers, ...own.layers] }, { diff: false });
+      streets = true;
+      warned = false;
+      notice.textContent = "";
+    } catch {
+      if (ask === asked) warn();
+    }
+  }
+  showStreets();
+  // Opened without a connection: try again once there is one.
+  addEventListener("online", () => {
+    if (!streets) showStreets();
   });
   atlas.onTheme(() => {
-    map.setPaintProperty("ocean", "background-color", atlas.dark() ? "#101a33" : "#dfe8ee");
-    map.setPaintProperty("land", "fill-color", atlas.dark() ? "#1b1823" : "#f8f7f2");
-    map.setPaintProperty("borders", "line-color", atlas.dark() ? "#423b52" : "#b8b8b0");
+    if (!streets) {
+      map.setPaintProperty("ocean", "background-color", atlas.dark() ? "#101a33" : "#dfe8ee");
+      map.setPaintProperty("land", "fill-color", atlas.dark() ? "#1b1823" : "#f8f7f2");
+      map.setPaintProperty("borders", "line-color", atlas.dark() ? "#423b52" : "#b8b8b0");
+    }
+    showStreets();
   });
   map.touchZoomRotate.disableRotation();
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
@@ -154,9 +194,11 @@
       map.fitBounds([[w, s], [e, n]], { padding: insets(), maxZoom: 15, duration: 900 });
     }
     if (data.type === "map:saved" && Array.isArray(data.maps)) {
-      const saved = await atlas.read(data.maps.slice(0, 60));
-      map.getSource("saved")?.setData(atlas.outlines(saved));
-      map.getSource("names")?.setData(atlas.centers(saved));
+      const found = await atlas.read(data.maps.slice(0, 60));
+      saved = atlas.outlines(found);
+      names = atlas.centers(found);
+      map.getSource("saved")?.setData(saved);
+      map.getSource("names")?.setData(names);
     }
   });
   map.on("load", () => {
@@ -164,10 +206,7 @@
     send({ type: "map:ready" });
     map.fire("moveend");
   });
-  let warned = false;
   map.on("error", (event) => {
-    if (warned || event.sourceId !== "streets") return;
-    warned = true;
-    notice.textContent = "No connection for the street preview. The outline is still enough to choose an area.";
+    if (event.sourceId && event.sourceId !== "saved" && event.sourceId !== "names") warn();
   });
 })();

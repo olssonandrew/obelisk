@@ -89,8 +89,10 @@ See [collections.md](collections.md) for the full behavior.
   areas over a bundled world outline.
 - **Styling:** layers come from `@protomaps/basemaps`. Labels use the system font, so
   no font files are needed.
-- **The area chooser** shows OpenStreetMap preview tiles (visible tiles only, with
-  attribution) under a frame you can move and resize. `measureMap` gives the exact
+- **The area chooser** shows a street preview from OpenFreeMap (OpenStreetMap data,
+  no key, with attribution) under a frame you can move and resize. OpenStreetMap's own
+  tile servers refuse requests from an app page, which has no web address to send.
+  Offline, the bundled world outline stays. `measureMap` gives the exact
   download size from a dry run of the extractor. The download itself is a Protomaps
   regional extract, not the preview tiles.
 

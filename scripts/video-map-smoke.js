@@ -82,7 +82,7 @@ try {
   const tiles = [];
   page.on("response", (r) => {
     if (
-      r.url().startsWith("https://tile.openstreetmap.org/") &&
+      r.url().startsWith("https://tiles.openfreemap.org/") &&
       r.status() === 200
     )
       tiles.push(r.url());

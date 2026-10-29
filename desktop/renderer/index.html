@@ -571,6 +571,10 @@
           <div id="health-hero" class="hero"></div>
           <button id="scan-archive" class="primary">Check files</button>
         </div>
+        <div class="health-card" id="verify-card" hidden>
+          <div id="verify-hero" class="hero"></div>
+          <button id="verify-contents" class="secondary">Verify contents</button>
+        </div>
         <div id="archive-report" class="panel"></div>
         <div class="section-label">Descriptions</div>
         <div id="archive-care" class="archive-care"></div>
@@ -620,6 +624,14 @@
           <div class="review-tag-all">
             <input id="review-tags" placeholder="Tags, separated by commas" aria-label="Tags for all files" />
             <button type="button" id="review-tag-all" class="secondary">Add</button>
+          </div>
+          <span class="review-bulk-label" id="review-move-label" hidden>On the library’s drive</span>
+          <div class="review-filing" id="review-move-box" hidden>
+            <select id="review-move" aria-labelledby="review-move-label">
+              <option value="" disabled selected>Move or copy?</option>
+              <option value="move">Move into the library (faster, no extra space)</option>
+              <option value="copy">Copy (the original stays; slow on this drive)</option>
+            </select>
           </div>
         </div>
         <div id="review-list" class="review-list"></div>
