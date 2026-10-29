@@ -26,6 +26,7 @@ test("folder imports are filed by type, keep where they came from, and reconcile
     );
     library = await openLibrary(path.join(root, "archive"));
     const [imported] = await library.importPaths([path.join(root, "Bank")]);
+    await library.reading.verify();
     await library.reading.idle();
     const result = { item: library.catalog.get(imported.item.id) };
     assert.ok(result.item.path.startsWith("Documents/statement--"));
@@ -83,6 +84,7 @@ test("archive check ignores links out of archive, and identical files can be kep
     library = await openLibrary(path.join(root, "archive"));
     const publicCopy = await library.importPaths([source]);
     const again = await library.importPaths([source], { type: "other" });
+    await library.reading.verify();
     await library.reading.idle();
     assert.notEqual(publicCopy[0].item.id, again[0].item.id);
     assert.equal(library.catalog.get(publicCopy[0].item.id).sha256, library.catalog.get(again[0].item.id).sha256);

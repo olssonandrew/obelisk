@@ -519,7 +519,7 @@ export function createInspector({
               : item.fileState === "modified" || item.integrity === "changed"
                 ? "Changed since saved"
                 : item.integrity === "pending"
-                  ? "Not checked yet"
+                  ? "Not verified yet"
                   : item.integrity === "publisher-verified"
                     ? "Verified against publisher"
                     : "Checksum recorded",

@@ -10,6 +10,18 @@ import { assertCommitted, assetName } from "./release-lib.js";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const zip = process.argv.includes("--zip");
 const run = (command, args, cwd = root) => execFileSync(command, args, { cwd, stdio: "inherit" });
+/** Tries a network step again after a pause, since a connection can drop partway. */
+async function retry(what, step) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return step();
+    } catch (error) {
+      if (attempt === 5) throw error;
+      console.log(`${what} failed; trying again (${attempt} of 4).`);
+      await new Promise((resolve) => setTimeout(resolve, attempt * 15000));
+    }
+  }
+}
 // The download is published beside the source of its commit, so it's built from one.
 if (zip) assertCommitted(root);
 
@@ -79,13 +91,15 @@ if (process.platform === "darwin") {
     const upload = path.join(path.dirname(app), "Obelisk-notarize.zip");
     run("ditto", ["-c", "-k", "--keepParent", app, upload]);
     const notary = ["--key", key, "--key-id", keyId, "--issuer", issuer, "--output-format", "json"];
-    const result = JSON.parse(execFileSync("xcrun", ["notarytool", "submit", upload, ...notary, "--wait"], { encoding: "utf8" }));
+    const result = JSON.parse(await retry("Notarizing", () => execFileSync("xcrun", ["notarytool", "submit", upload, ...notary, "--wait"], { encoding: "utf8" })));
     await rm(upload, { force: true });
     if (result.status !== "Accepted") {
       const log = execFileSync("xcrun", ["notarytool", "log", result.id, ...notary.slice(0, -2)], { encoding: "utf8" });
       throw new Error(`Apple didn't accept the app (${result.status}):\n${log}`);
     }
-    run("xcrun", ["stapler", "staple", app]);
+    console.log(`Notarized: ${result.id} ${result.status}`);
+    // Apple's ticket can take a moment to be fetchable, and the fetch can drop.
+    await retry("Stapling", () => run("xcrun", ["stapler", "staple", app]));
     run("spctl", ["--assess", "--type", "execute", "--verbose=2", app]);
   } else {
     run("codesign", ["--force", "--deep", "--sign", "-", app]);

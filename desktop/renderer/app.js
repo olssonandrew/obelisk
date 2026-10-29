@@ -1022,7 +1022,7 @@ function renderJobs() {
   const imports = state.imports || [],
     importsIn = (phases) => imports.filter((t) => phases.includes(t.phase)).map((task) => ({ task })),
     reading = state.reading,
-    readingShown = reading && (reading.current || reading.waiting || reading.run);
+    readingShown = reading && (reading.current || reading.run);
   if (readingShown) host.append(el("div", "Checking", "jobs-heading"), readingRow(reading));
   if (!state.jobs.length && !imports.length) {
     if (readingShown) return;
@@ -1182,7 +1182,7 @@ function announceAdded() {
     toast(task.phase === "failed" ? `Couldn’t add ${task.title}: ${task.error}` : `Added ${task.title}${place ? ` to ${place}` : ""}.`);
   }
 }
-/** The background reader: checksums of new files, and a Verify contents run. */
+/** A Verify contents run, reading one file at a time. */
 function readingRow(r) {
   const row = el("article", "", "job"),
     top = el("div", "", "job-top"),
@@ -1193,7 +1193,7 @@ function readingRow(r) {
         await refresh();
         renderJobs();
       }), cls);
-  top.append(el("h3", r.run ? "Verifying contents" : "Checking new files"), controls);
+  top.append(el("h3", "Verifying contents"), controls);
   controls.append(r.paused ? act("Resume", "resume") : act("Pause", "pause"));
   if (r.run) controls.append(act("Stop", "stopVerify", "text-button"));
   const c = r.current,
@@ -1202,9 +1202,7 @@ function readingRow(r) {
     parts = r.paused ? ["Paused"] : c ? [c.title, `${size(c.done)} of ${size(c.bytes)}`, `${Math.floor(share * 100)}%`] : ["Waiting to start"];
   if (c && !r.paused && rate > 1024) parts.push(`${size(rate)}/s`, `about ${duration((c.bytes - c.done) / rate)} left`);
   row.append(top, el("p", parts.join(" · ")));
-  const more = [],
-    queued = r.waiting - (c && !c.verify ? 1 : 0);
-  if (queued > 0) more.push(`${queued.toLocaleString()} more new ${queued === 1 ? "file" : "files"} to check`);
+  const more = [];
   if (r.run) more.push(`${r.run.done.toLocaleString()} of ${r.total.toLocaleString()} files verified`, `${size(r.run.read)} of ${size(r.run.bytes)}`);
   if (more.length) row.append(el("p", more.join(" · ")));
   if (c && !r.paused) {

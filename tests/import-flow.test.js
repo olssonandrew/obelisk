@@ -154,6 +154,7 @@ test("an import is usable at once, shows its progress, and is read once for its 
     assert.deepEqual(await readFile(path.join(library.archiveRoot, result.item.path)), bytes, "it's there before it's checked");
     // Cloned on the same drive, its checksum is read in the background; copied, as it's written.
     assert.equal(result.item.integrity, result.item.sha256 ? "hashed" : "pending");
+    await library.reading.verify();
     await library.reading.idle();
     const item = library.catalog.get(result.item.id);
     assert.equal(item.sha256, createHash("sha256").update(bytes).digest("hex"));
@@ -221,6 +222,7 @@ test("a big file chosen to be moved in is checked, then moved, never copied", as
     const saved = path.join(library.archiveRoot, moved.item.path);
     assert.equal((await stat(saved)).ino, ino, "the same file, moved");
     assert.equal(moved.item.integrity, "pending", "moved at once, read after");
+    await library.reading.verify();
     await library.reading.idle();
     assert.equal(library.catalog.get(moved.item.id).sha256, library.catalog.get(copied.item.id).sha256);
     assert.deepEqual(await readdir(path.dirname(source)), [], "it left its old folder");

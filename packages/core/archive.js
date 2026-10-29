@@ -73,8 +73,8 @@ export async function hashFile(file, progress) {
  * Where a ZIM keeps the MD5 of everything before it, and that MD5. Kiwix writes it
  * when it builds the file, so a match means the file is exactly what was published.
  */
-async function zimChecksum(file) {
-  if (!/\.zim$/i.test(file)) return null;
+async function zimChecksum(file, name = file) {
+  if (!/\.zim$/i.test(name)) return null;
   const handle = await open(file, "r");
   try {
     const head = Buffer.alloc(80),
@@ -287,7 +287,8 @@ async function commitImport({
   const target = fileTarget(filename, { type, kind, fallback }),
     shelf = shelfOf(target.type);
   kind = target.kind;
-  const checksum = sha256 || (pending ? null : await hashFile(temporaryPath));
+  const checksum = sha256 || (pending ? null : await hashFile(temporaryPath)),
+    carried = await zimChecksum(temporaryPath, filename).catch(() => null);
   const bytes = (await stat(temporaryPath)).size;
   // Not the file that was described: the source has changed it, or sent something else.
   if (expectedBytes && bytes !== expectedBytes)
@@ -343,6 +344,9 @@ async function commitImport({
     rights: rights || "Not specified; check the original source.",
     integrity: expectedSha256 || embedded ? "publisher-verified" : checksum ? "hashed" : "pending",
     ...(checksum ? { verifiedAt: new Date().toISOString() } : {}),
+    // A ZIM's own MD5, as Kiwix wrote it: what its contents should be, read in an instant.
+    // Verify contents checks the file against it.
+    ...(carried ? { embeddedMd5: carried.md5 } : {}),
     ...(embedded === false ? { fileState: "damaged" } : {}),
     offlineTested: false,
     accessNote: accessNote(filename, shelf.id),

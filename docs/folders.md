@@ -56,6 +56,9 @@ folder is gone, and item folders found at the root.
   plan is kept, the catalog stays with the files, and it's tried again on the next
   opening. There's one plan at a time, so moves and renames are refused, saying
   what's in the way, until it finishes.
+- **Edits take turns with moves.** Folder changes, moving files and removing them
+  share one queue with metadata edits (`exclusive` in `packages/core/metadata.js`),
+  so an edit never writes a file's old place back after it has moved or gone.
 - **Every path** must stay inside the library, symlinks included: journal steps,
   moves, new folders, `folder.json` and imports. A folder replaced by a link to
   somewhere else is refused, not followed.

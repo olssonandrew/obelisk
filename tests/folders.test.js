@@ -73,6 +73,44 @@ test("folders can be made, renamed (directory follows), re-iconed and moved at a
   }
 });
 
+test("files edited while their folder moves or goes to the Trash end up where they really are", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "obelisk-folders-"));
+  const library = await openLibrary(path.join(root, "lib"));
+  const trash = trashIn(path.join(root, "Trash"));
+  try {
+    const docs = named(library, "Documents"),
+      project = await library.folders.create(docs.id, "Project");
+    const files = [];
+    for (let n = 0; n < 30; n++) {
+      files.push(path.join(root, `note ${n}.txt`));
+      await writeFile(files.at(-1), `note ${n}`);
+    }
+    const added = await library.importEntries((await library.previewPaths(files)).map((f) => ({ ...f, folderId: project.id })));
+    const ids = added.map((r) => r.item.id);
+    // Edits started on both sides of the move, one file at a time and all at once.
+    const edits = ids.map((id, n) => library.updateMetadata(id, { rating: (n % 5) + 1 }));
+    const moving = library.folders.remove(project.id, { keep: true, trash });
+    edits.push(library.updateTags(ids, ["kept"], "add"));
+    await Promise.all([moving, ...edits]);
+    for (const [n, id] of ids.entries()) {
+      const item = library.catalog.get(id);
+      assert.ok(item?.path.startsWith("Documents/"), `note ${n} is in the catalog where it moved`);
+      const manifest = await json(path.join(library.archiveRoot, path.dirname(item.path), "item.json"));
+      assert.equal(manifest.rating, (n % 5) + 1, `note ${n} kept its rating`);
+      assert.deepEqual(manifest.tags, ["kept"], `note ${n} kept its tag`);
+    }
+    // Sent to the Trash while being edited: gone, and not brought back by the edit.
+    const tagging = library.updateTags(ids, ["late"], "add");
+    const removing = library.removeItems(ids, trash);
+    await Promise.allSettled([tagging, removing]);
+    for (const id of ids) assert.equal(library.catalog.get(id), null);
+    assert.deepEqual((await readdir(path.join(library.archiveRoot, "Documents"))).filter((n) => n.startsWith("note")), []);
+  } finally {
+    await library.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("deleting a folder moves its contents up, or sends everything to the Trash; never silently", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "obelisk-folders-"));
   const library = await openLibrary(path.join(root, "lib"));

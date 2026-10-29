@@ -27,6 +27,7 @@ async function withLibrary(run) {
 async function add(library, root, name, body) {
   await writeFile(path.join(root, name), body);
   const [result] = await library.importPaths([path.join(root, name)]);
+  await library.reading.verify();
   await library.reading.idle();
   const item = library.catalog.get(result.item.id);
   return { item, file: path.join(library.archiveRoot, item.path) };
@@ -103,6 +104,37 @@ test("files from before sizes and dates were kept get them at the next check, an
     const read = library().catalog.get(item.id);
     assert.ok(read.verifiedAt <= library().catalog.get(newer.item.id).verifiedAt, "the never-verified file came first");
     assert.equal(read.fileState, "ok");
+  });
+});
+
+test("a file moved or cloned in isn't read until someone verifies it", async () => {
+  await withLibrary(async ({ root, library }) => {
+    const source = path.join(root, "atlas.txt");
+    await writeFile(source, "a big file, in spirit");
+    const [result] = await library().importPaths([source]);
+    // Copied from another drive, it would have its checksum from the copy.
+    if (result.item.sha256) return;
+    assert.equal(result.item.integrity, "pending");
+    await library().reading.idle();
+    assert.equal(library().catalog.get(result.item.id).sha256, null, "nothing reads it by itself");
+    assert.equal(library().state().reading.current, null);
+    assert.deepEqual((await library().check()).changes, [], "a check doesn't need its checksum");
+    await library().reading.verify();
+    await library().reading.idle();
+    assert.equal(library().catalog.get(result.item.id).sha256, createHash("sha256").update("a big file, in spirit").digest("hex"));
+  });
+});
+
+test("a ZIM's own MD5 is recorded when it's added, without reading the file", async () => {
+  await withLibrary(async ({ root, library }) => {
+    const body = Buffer.alloc(200, 1);
+    body.writeUInt32LE(72173914, 0);
+    body.writeBigUInt64LE(184n, 72);
+    const md5 = createHash("md5").update(body.subarray(0, 184)).digest();
+    md5.copy(body, 184);
+    await writeFile(path.join(root, "wikipedia.zim"), body);
+    const [result] = await library().importPaths([path.join(root, "wikipedia.zim")]);
+    assert.equal(result.item.embeddedMd5, md5.toString("hex"));
   });
 });
 

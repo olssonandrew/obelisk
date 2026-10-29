@@ -248,7 +248,7 @@ export async function openLibrary(
       if (checking) throw new Error("Wait for the archive check.");
       pending++;
       try {
-        return await task();
+        return await editMetadata.exclusive(task);
       } finally {
         pending--;
         changed();
@@ -460,7 +460,6 @@ export async function openLibrary(
           } finally {
             if (!moving) await rm(temporaryPath, { force: true });
           }
-          if (result.item?.integrity === "pending") readSoon();
           finishTask(task, result);
           results.push(result);
         }
@@ -469,10 +468,10 @@ export async function openLibrary(
         pending--;
       }
     }
-    // One file is read at a time, in the background: first to work out checksums for
-    // files moved or cloned in without one, then, during a Verify contents run, to
-    // re-read the files confirmed longest ago. Nothing waits on it, and it gives way to
-    // imports and checks. A run is remembered, so it carries on after a restart.
+    // Verify contents: one file read at a time, in the background, only when someone
+    // starts a run. Files moved or cloned in have no checksum until then: nothing was
+    // copied, so there was nothing a read could catch. It gives way to imports and
+    // checks, and a run is remembered, so it carries on after a restart.
     const verifyFile = path.join(stateRoot, "verify.json");
     let reader = null,
       readPaused = false,
@@ -486,11 +485,10 @@ export async function openLibrary(
     } catch {}
     const readable = () =>
       catalog.list().filter((i) => !i.placeholder && i.path && !["missing", "ambiguous"].includes(i.fileState));
+    // Only during a run someone started: never-verified files first, then the oldest.
     function nextToRead() {
-      const usable = readable().filter((i) => !skipped.has(i.id)),
-        fresh = usable.find((i) => !i.sha256);
-      if (fresh) return { item: fresh, verify: false };
       if (!verifyRun) return null;
+      const usable = readable().filter((i) => !skipped.has(i.id));
       let oldest = null;
       for (const i of usable)
         if (!(i.verifiedAt >= verifyRun.startedAt) && (!oldest || (i.verifiedAt || "") < (oldest.verifiedAt || ""))) oldest = i;
@@ -590,7 +588,7 @@ export async function openLibrary(
         changed();
       }
     }
-    // What was left unread when it last closed carries on once it has opened.
+    // A run that was under way when it last closed carries on once it has opened.
     void settled.then(() => readSoon());
     // Files put into the library folder while it is open are added where they were
     // put, once they have stopped changing. Those already there when it opened wait
@@ -812,59 +810,61 @@ export async function openLibrary(
           throw new Error("No trash is available.");
         pending++;
         try {
-          const removed = [];
-          for (const id of new Set(ids)) {
-            const item = catalog.get(id);
-            if (!item?.path) continue;
-            const directory = path.dirname(path.resolve(archiveRoot, item.path));
-            let real;
-            try {
-              real = await realpath(directory);
-            } catch {
-              // The folder is already gone; only the index entry remains.
-              catalog.remove(id);
-              removed.push(id);
-              continue;
-            }
-            if (!real.startsWith(archiveRoot + path.sep))
-              throw new Error("File is outside this archive.");
-            let manifest = null;
-            try {
-              manifest = JSON.parse(
-                await readFile(path.join(real, "item.json"), "utf8"),
-              );
-            } catch {}
-            // A manifest kept apart from its file goes too, or it would bring the item back.
-            if (item.manifestPath) {
-              const apart = path.resolve(archiveRoot, item.manifestPath);
+          return await editMetadata.exclusive(async () => {
+            const removed = [];
+            for (const id of new Set(ids)) {
+              const item = catalog.get(id);
+              if (!item?.path) continue;
+              const directory = path.dirname(path.resolve(archiveRoot, item.path));
+              let real;
               try {
-                const at = await realpath(apart);
-                if (at.startsWith(archiveRoot + path.sep) && path.dirname(at) !== real &&
-                    JSON.parse(await readFile(at, "utf8")).id === id)
-                  await dispose(at);
-              } catch (e) {
-                if (e.code !== "ENOENT" && !(e instanceof SyntaxError)) throw e;
+                real = await realpath(directory);
+              } catch {
+                // The folder is already gone; only the index entry remains.
+                catalog.remove(id);
+                removed.push(id);
+                continue;
               }
-            }
-            const owned = manifest?.id === id,
-              names = (await readdir(real)).filter((n) => n !== ".DS_Store"),
-              expected = [path.basename(item.path), ...(owned ? ["item.json"] : [])];
-            // A folder holding only this item goes whole; anything else stays put.
-            if (owned && names.every((n) => expected.includes(n)))
-              await dispose(real);
-            else
-              for (const name of expected) {
-                const target = path.join(real, name);
+              if (!real.startsWith(archiveRoot + path.sep))
+                throw new Error("File is outside this archive.");
+              let manifest = null;
+              try {
+                manifest = JSON.parse(
+                  await readFile(path.join(real, "item.json"), "utf8"),
+                );
+              } catch {}
+              // A manifest kept apart from its file goes too, or it would bring the item back.
+              if (item.manifestPath) {
+                const apart = path.resolve(archiveRoot, item.manifestPath);
                 try {
-                  if ((await lstat(target)).isFile()) await dispose(target);
+                  const at = await realpath(apart);
+                  if (at.startsWith(archiveRoot + path.sep) && path.dirname(at) !== real &&
+                      JSON.parse(await readFile(at, "utf8")).id === id)
+                    await dispose(at);
                 } catch (e) {
-                  if (e.code !== "ENOENT") throw e;
+                  if (e.code !== "ENOENT" && !(e instanceof SyntaxError)) throw e;
                 }
               }
-            catalog.remove(id);
-            removed.push(id);
-          }
-          return removed;
+              const owned = manifest?.id === id,
+                names = (await readdir(real)).filter((n) => n !== ".DS_Store"),
+                expected = [path.basename(item.path), ...(owned ? ["item.json"] : [])];
+              // A folder holding only this item goes whole; anything else stays put.
+              if (owned && names.every((n) => expected.includes(n)))
+                await dispose(real);
+              else
+                for (const name of expected) {
+                  const target = path.join(real, name);
+                  try {
+                    if ((await lstat(target)).isFile()) await dispose(target);
+                  } catch (e) {
+                    if (e.code !== "ENOENT") throw e;
+                  }
+                }
+              catalog.remove(id);
+              removed.push(id);
+            }
+            return removed;
+          });
         } finally {
           pending--;
         }
@@ -1057,7 +1057,7 @@ export async function openLibrary(
           throw new Error("Select between 1 and 5,000 files.");
         pending++;
         try {
-          return await folders.moveItems(ids, folderId);
+          return await editMetadata.exclusive(() => folders.moveItems(ids, folderId));
         } finally {
           pending--;
           changed();

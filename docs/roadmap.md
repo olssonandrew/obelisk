@@ -17,7 +17,8 @@ code.
 | Tags, ratings, dates, notes, search | ✅ | |
 | Integrity check: missing, moved, changed and untracked files | ✅ | From sizes, dates and file IDs; reads only what changed. |
 | Verify contents: gradual, resumable re-read that finds damaged files | ✅ | Started by hand; not yet scheduled or paced. |
-| Checksums worked out in the background after import; ZIMs checked against their own MD5 | ✅ | [library-format.md](library-format.md#checks) |
+| Checksums only for copied or downloaded files; moved and cloned files are read only by Verify contents | ✅ | [library-format.md](library-format.md#checks) |
+| ZIMs: their own MD5 recorded on import and checked by Verify contents | ✅ | |
 | Crash-safe moves (journal, undo on failure, retry on next open) | ✅ | |
 | Warning when a library is in iCloud, Dropbox, OneDrive and similar | ✅ | |
 

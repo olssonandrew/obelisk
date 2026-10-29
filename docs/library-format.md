@@ -99,6 +99,7 @@ file left without one after a crash shows up in Check archive, ready to add agai
 Every manifest has:
 - `schemaVersion: 1`, a stable `id`, `title`, `description`, `filename`, `path`
 - `bytes`, `sha256` (null until it's worked out; see Checks), `acquiredAt`
+- `embeddedMd5`, for a ZIM: the MD5 of its contents that the file carries
 - `stamp` (`size`, `mtimeMs`, `ino`) and `verifiedAt`: when its contents were last
   confirmed, and how the file looked then
 - `source`: where it came from
@@ -169,12 +170,17 @@ gives way to imports and checks. Each file records `verifiedAt`. A run is
 remembered in `.obelisk/verify.json`, so it carries on after a restart; Pause and Stop
 are in Transfers.
 
-**Checksums worked out after import.** A file moved or cloned in is usable at once,
-with `sha256: null` and `integrity: "pending"`. The background reader works out its
-checksum, then records it with its stamp and `verifiedAt`. A file copied from another
-drive gets its checksum as it's written. A ZIM carries an MD5 of its own contents,
-written by Kiwix; the same read checks it, and a ZIM that matches is marked
-`publisher-verified`, while one that doesn't is marked damaged.
+**When a checksum is worked out.** A checksum is only worth reading a file for when
+its bytes were copied: a download is checked against its publisher's checksum, and a
+file copied from another drive gets its checksum as it's written, at no extra cost. A
+file moved or cloned in on the same drive had nothing copied, so nothing is read: it
+is usable at once, with `sha256: null` and `integrity: "pending"` (shown as "Not
+verified yet"), until a Verify contents run reads it. Nothing reads files on its own.
+
+A ZIM carries an MD5 of its own contents, written by Kiwix. It's recorded on import
+as `embeddedMd5`, from 16 bytes near the end of the file. Verify contents checks the
+file against it: a ZIM that matches is marked `publisher-verified`, and one that
+doesn't is marked damaged.
 
 Files from before stamps were kept get one at their next check, without their
 contents being read, and come first in the next Verify contents run.

@@ -8,7 +8,7 @@ export function createManifestEditor(catalog, root) {
   let queue = Promise.resolve();
   // `edited: false` for what the app records about the file itself (its checksum),
   // which isn't an edit to its details.
-  return (ids, update, { edited = true } = {}) => {
+  const edit = (ids, update, { edited = true } = {}) => {
     const task = queue
       .catch(() => {})
       .then(async () => {
@@ -62,6 +62,17 @@ export function createManifestEditor(catalog, root) {
     queue = task;
     return task;
   };
+  /**
+   * Runs a task that moves or removes files in the same queue. Otherwise an edit could
+   * read a file's record, the file move, and the edit write the old place back.
+   * The task must not edit metadata itself, or it would wait for its own turn.
+   */
+  edit.exclusive = (task) => {
+    const run = queue.catch(() => {}).then(task);
+    queue = run;
+    return run;
+  };
+  return edit;
 }
 const textFields = { creator: 200, created: 60, rights: 500 };
 export function metadataPatch(value) {
