@@ -3,7 +3,7 @@
 Each release's notes are its section here. `npm run release` refuses a version
 without one, and the Release workflow publishes the section as the release notes.
 
-## 0.1.0
+## 0.1.1
 
 The first public beta.
 

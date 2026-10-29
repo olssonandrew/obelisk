@@ -20,8 +20,9 @@ const env = { ...process.env, OBELISK_HOME: home };
 delete env.ELECTRON_RUN_AS_NODE;
 // Offline, as on a drive taken somewhere without internet: every connection goes to a
 // proxy that isn't there. An unzipped build's chrome-sandbox isn't owned by root, and
-// CI can't fix that.
-const args = ["--proxy-server=127.0.0.1:9", ...(process.platform === "linux" ? ["--no-sandbox"] : [])];
+// CI can't fix that. CI's Linux machines have no GPU, and maps need WebGL, so they
+// draw with Chromium's software renderer.
+const args = ["--proxy-server=127.0.0.1:9", ...(process.platform === "linux" ? ["--no-sandbox", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] : [])];
 const started = Date.now();
 const app = await electron.launch({ executablePath, args, env, timeout: 60000 });
 try {
