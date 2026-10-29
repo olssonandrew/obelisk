@@ -1,0 +1,51 @@
+name: Mac signing
+description: Puts the Developer ID certificate in a temporary keychain and the notary key in a file, for npm run package.
+inputs:
+  certificate:
+    description: The .p12 certificate, base64-encoded
+    required: true
+  certificate-password:
+    required: true
+  api-key:
+    description: The App Store Connect API key (.p8 contents)
+    required: true
+  api-key-id:
+    required: true
+  api-issuer:
+    required: true
+  team-id:
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        CERTIFICATE: ${{ inputs.certificate }}
+        CERTIFICATE_PASSWORD: ${{ inputs.certificate-password }}
+        API_KEY: ${{ inputs.api-key }}
+      run: |
+        set -euo pipefail
+        for value in "$CERTIFICATE" "$CERTIFICATE_PASSWORD" "$API_KEY"; do
+          [ -n "$value" ] || { echo "::error::An Apple signing secret is missing."; exit 1; }
+        done
+        keychain="$RUNNER_TEMP/signing.keychain-db"
+        password="$(openssl rand -hex 24)"
+        security create-keychain -p "$password" "$keychain"
+        security set-keychain-settings -lut 21600 "$keychain"
+        security unlock-keychain -p "$password" "$keychain"
+        echo "$CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+        security import "$RUNNER_TEMP/certificate.p12" -k "$keychain" -P "$CERTIFICATE_PASSWORD" -f pkcs12 -T /usr/bin/codesign
+        rm "$RUNNER_TEMP/certificate.p12"
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$password" "$keychain" > /dev/null
+        security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+        security find-identity -v -p codesigning "$keychain" | grep -q "Developer ID Application" \
+          || { echo "::error::The certificate isn't a Developer ID Application certificate."; exit 1; }
+        printf '%s\n' "$API_KEY" > "$RUNNER_TEMP/notary-key.p8"
+        {
+          echo "MAC_SIGN_KEYCHAIN=$keychain"
+          echo "APPLE_API_KEY_PATH=$RUNNER_TEMP/notary-key.p8"
+          echo "APPLE_API_KEY_ID=${{ inputs.api-key-id }}"
+          echo "APPLE_API_ISSUER=${{ inputs.api-issuer }}"
+          echo "APPLE_TEAM_ID=${{ inputs.team-id }}"
+          echo "OBELISK_REQUIRE_SIGNING=1"
+        } >> "$GITHUB_ENV"

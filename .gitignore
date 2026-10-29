@@ -26,3 +26,8 @@ demo/
 desktop/renderer/reader/vendor/
 
 desktop/renderer/zim/reader.bundle.js
+
+# Signing keys and certificates
+KEYS/
+*.p12
+*.p8

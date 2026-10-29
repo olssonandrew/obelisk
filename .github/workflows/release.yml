@@ -42,6 +42,15 @@ jobs:
       - run: npm run setup:maps
         env:
           GITHUB_TOKEN: ${{ github.token }}
+      - if: runner.os == 'macOS'
+        uses: ./.github/actions/mac-signing
+        with:
+          certificate: ${{ secrets.MAC_CERTIFICATE_P12 }}
+          certificate-password: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+          api-key: ${{ secrets.APPLE_API_KEY }}
+          api-key-id: ${{ secrets.APPLE_API_KEY_ID }}
+          api-issuer: ${{ secrets.APPLE_API_ISSUER }}
+          team-id: ${{ secrets.APPLE_TEAM_ID }}
       - run: npm run package -- --zip
       - if: runner.os == 'Linux'
         run: xvfb-run -a node scripts/launch-check.js

@@ -1,0 +1,46 @@
+name: Mac signing check
+# Started by hand from the Actions tab: builds, signs and notarizes the Mac app on both
+# kinds of Mac and opens it, without publishing anything. Run it after changing how
+# the Mac build is signed, before releasing.
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: npm run setup:maps
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - uses: ./.github/actions/mac-signing
+        with:
+          certificate: ${{ secrets.MAC_CERTIFICATE_P12 }}
+          certificate-password: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+          api-key: ${{ secrets.APPLE_API_KEY }}
+          api-key-id: ${{ secrets.APPLE_API_KEY_ID }}
+          api-issuer: ${{ secrets.APPLE_API_ISSUER }}
+          team-id: ${{ secrets.APPLE_TEAM_ID }}
+      - run: npm run package -- --zip
+      - run: node scripts/launch-check.js
+      # What a person's Mac sees: the zip as downloaded, unzipped, with the quarantine
+      # flag a browser sets.
+      - run: |
+          mkdir "$RUNNER_TEMP/downloaded"
+          ditto -x -k dist/Obelisk-mac-*.zip "$RUNNER_TEMP/downloaded"
+          xattr -w com.apple.quarantine "0081;$(printf %x $(date +%s));Safari;" "$RUNNER_TEMP/downloaded/Obelisk.app"
+          spctl --assess --type execute --verbose=2 "$RUNNER_TEMP/downloaded/Obelisk.app"
+          xcrun stapler validate "$RUNNER_TEMP/downloaded/Obelisk.app"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: signed-${{ matrix.os }}
+          path: dist/Obelisk-mac-*.zip
+          retention-days: 3

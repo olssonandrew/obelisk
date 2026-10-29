@@ -32,7 +32,7 @@ Get the latest version from **[Releases](../../releases/latest)**:
 
 | System                             | Download                                         | First launch                                                                                                                                                                            |
 | ---------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **macOS** (Apple Silicon or Intel) | `Obelisk-mac-arm64.zip` or `Obelisk-mac-x64.zip` | Unzip and move Obelisk to Applications. It isn't signed by a registered developer yet, so the first time, open it, then choose **Open Anyway** in System Settings → Privacy & Security. |
+| **macOS** (Apple Silicon or Intel) | `Obelisk-mac-arm64.zip` or `Obelisk-mac-x64.zip` | Unzip and move Obelisk to Applications. It's signed and notarized by Apple. |
 | **Windows** (experimental)         | `Obelisk-windows-x64.zip`                        | Unzip and run `Obelisk.exe`. If Windows warns you, choose **More info → Run anyway**.                                                                                                   |
 | **Linux** (experimental)           | `Obelisk-linux-x64.zip`                          | Unzip and run `Obelisk`. If it won't start, run `sudo chown root chrome-sandbox && sudo chmod 4755 chrome-sandbox` in its folder.                                                       |
 

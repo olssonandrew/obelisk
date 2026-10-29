@@ -35,7 +35,7 @@ point tests at real services.
 
 **What isn't:**
 - Windows and Linux runtime; CI runs the core tests there.
-- Signed installers.
+- Signed Windows builds.
 - Full-size Wikipedia, split ZIM files and dynamic Zimit replay.
 - Protected EPUBs, and PDF text search and forms.
 
@@ -57,9 +57,15 @@ next patch version; don't move a published tag.
 `npm run package -- --zip` and `scripts/gpl-source.js` refuse uncommitted changes, so
 a download and its published source are always the same commit.
 
-Mac builds are ad-hoc signed by `npm run package`, so a downloaded copy opens with
-**Open Anyway** rather than being called damaged. Signing with a Developer ID and
-notarizing needs an Apple Developer account.
+**Mac signing.** The Release workflow signs Mac builds with the project's Developer ID,
+has Apple notarize them, and staples the result, so a downloaded copy opens normally.
+It reads six repository secrets: `MAC_CERTIFICATE_P12` (the Developer ID Application
+certificate, `.p12`, base64), `MAC_CERTIFICATE_PASSWORD`, `APPLE_API_KEY` (an App Store
+Connect API key, `.p8`), `APPLE_API_KEY_ID`, `APPLE_API_ISSUER` and `APPLE_TEAM_ID`. After
+changing how Mac builds are signed, run **Mac signing check** from the Actions tab; it
+signs, notarizes and opens both Mac builds without publishing. Without those settings,
+as in a fork, `npm run package` signs ad hoc instead, so a downloaded copy opens with
+**Open Anyway** rather than being called damaged.
 
 ## Screenshots
 

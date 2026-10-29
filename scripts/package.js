@@ -1,5 +1,6 @@
 import { packager } from "@electron/packager";
-import { execFileSync } from "node:child_process";
+import { sign } from "@electron/osx-sign";
+import { execFileSync, spawnSync } from "node:child_process";
 import { copyFile, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -56,10 +57,40 @@ if (process.platform === "darwin") {
   // The download is the app alone, so Electron's and Chromium's licenses go inside it.
   for (const name of ["LICENSE", "LICENSES.chromium.html"])
     await copyFile(path.join(out, name), path.join(app, "Contents/Resources", name === "LICENSE" ? "LICENSE.electron" : name));
-  // Unsigned still needs a whole signature: renaming Electron breaks the one it ships
-  // with, and macOS calls a downloaded app with a broken signature "damaged".
-  run("codesign", ["--force", "--deep", "--sign", "-", app]);
-  run("codesign", ["--verify", "--deep", "--strict", app]);
+  // Signed with a Developer ID and notarized when the signing settings are there (the
+  // release workflow sets them; see CONTRIBUTING.md). Otherwise a build still needs
+  // a whole signature: renaming Electron breaks the one it ships with, and macOS calls
+  // a downloaded app with a broken signature "damaged".
+  const { APPLE_TEAM_ID: team, APPLE_API_KEY_PATH: key, APPLE_API_KEY_ID: keyId, APPLE_API_ISSUER: issuer } = process.env;
+  const signing = Boolean(team && key && keyId && issuer);
+  if (!signing && process.env.OBELISK_REQUIRE_SIGNING) throw new Error("This build must be signed, but the Apple signing settings are missing.");
+  if (signing) {
+    await sign({
+      app,
+      platform: "darwin",
+      identity: `Developer ID Application`,
+      keychain: process.env.MAC_SIGN_KEYCHAIN || undefined,
+      optionsForFile: () => ({ hardenedRuntime: true, entitlements: path.join(root, "desktop/entitlements.mac.plist") }),
+    });
+    run("codesign", ["--verify", "--deep", "--strict", app]);
+    const signer = spawnSync("codesign", ["-dv", app], { encoding: "utf8" }).stderr;
+    if (!signer.includes(`TeamIdentifier=${team}`)) throw new Error(`Signed by the wrong team:\n${signer}`);
+    // Apple scans it, then the approval is stapled on so it opens without a connection.
+    const upload = path.join(path.dirname(app), "Obelisk-notarize.zip");
+    run("ditto", ["-c", "-k", "--keepParent", app, upload]);
+    const notary = ["--key", key, "--key-id", keyId, "--issuer", issuer, "--output-format", "json"];
+    const result = JSON.parse(execFileSync("xcrun", ["notarytool", "submit", upload, ...notary, "--wait"], { encoding: "utf8" }));
+    await rm(upload, { force: true });
+    if (result.status !== "Accepted") {
+      const log = execFileSync("xcrun", ["notarytool", "log", result.id, ...notary.slice(0, -2)], { encoding: "utf8" });
+      throw new Error(`Apple didn't accept the app (${result.status}):\n${log}`);
+    }
+    run("xcrun", ["stapler", "staple", app]);
+    run("spctl", ["--assess", "--type", "execute", "--verbose=2", app]);
+  } else {
+    run("codesign", ["--force", "--deep", "--sign", "-", app]);
+    run("codesign", ["--verify", "--deep", "--strict", app]);
+  }
 }
 
 if (zip) {
