@@ -17,3 +17,8 @@ The first public beta.
 - Collections: books, paintings, drawings, photography, early websites, podcasts,
   music and films to save in one step.
 - Tested most on Apple Silicon Macs. Windows and Linux builds are experimental.
+
+## 0.1.0
+
+Tagged but never published: its release builds failed their launch checks. 0.1.1 is
+the same release.

@@ -20,22 +20,23 @@ const env = { ...process.env, OBELISK_HOME: home };
 delete env.ELECTRON_RUN_AS_NODE;
 // Offline, as on a drive taken somewhere without internet: every connection goes to a
 // proxy that isn't there. An unzipped build's chrome-sandbox isn't owned by root, and
-// CI can't fix that. CI's Linux and Intel Mac machines have no GPU, and maps need
-// WebGL, so they draw with Chromium's software renderer.
-const noGpu = process.platform === "linux" || (process.platform === "darwin" && process.arch === "x64");
-const args = [
-  "--proxy-server=127.0.0.1:9",
-  ...(process.platform === "linux" ? ["--no-sandbox"] : []),
-  ...(noGpu ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] : []),
-];
+// CI can't fix that.
+const args = ["--proxy-server=127.0.0.1:9", ...(process.platform === "linux" ? ["--no-sandbox"] : []), ...process.argv.slice(2)];
 const started = Date.now();
 const app = await electron.launch({ executablePath, args, env, timeout: 60000 });
 try {
   const page = await app.firstWindow({ timeout: 60000 });
   await page.locator(".primary-nav").waitFor();
   const opened = (Date.now() - started) / 1000;
+  // Some CI machines (Linux, Intel Mac) have no GPU, so no WebGL, and a map can't be
+  // drawn there. That says nothing about the build, so only that error is let through.
+  const webgl = String(await app.evaluate(({ app }) => app.getGPUFeatureStatus().webgl)).startsWith("enabled");
   const errors = [];
-  page.on("pageerror", (error) => errors.push(error.message));
+  let skipped = 0;
+  page.on("pageerror", (error) => {
+    if (!webgl && /WebGL2? is required/.test(error.message)) skipped++;
+    else errors.push(error.message);
+  });
   const state = await page.evaluate(() => window.obelisk.state());
   if (state.appVersion !== version) throw new Error(`The build says it's ${state.appVersion}, not ${version}.`);
   // Each demo file opens in its reader or player.
@@ -49,6 +50,7 @@ try {
     if (errors.length) throw new Error(`Opening ${item.title} offline: ${errors.join("; ")}`);
   }
   console.log(`✓ Obelisk ${version} opens offline in ${opened.toFixed(1)} s on ${process.platform} ${process.arch}, and so do its ${demo.length} demo files.`);
+  if (skipped) console.log(`  This machine has no WebGL, so ${skipped === 1 ? "a map" : `${skipped} maps`} couldn't be drawn.`);
   // A library of one's own gets a copy of the app, saved in the background.
   await page.evaluate((folder) => window.obelisk.setupCreate(folder), path.join(home, "Drive", "Obelisk"));
   const deadline = Date.now() + 180000;

@@ -58,6 +58,17 @@ test("a check trusts an unchanged size and date; Verify contents reads, and find
   });
 });
 
+test("a check started during a change waits for it, rather than refusing", async () => {
+  await withLibrary(async ({ root, library }) => {
+    const { item } = await add(library(), root, "note.txt", "A short note.");
+    const tagging = library().updateTags([item.id], ["kept"], "add");
+    const checked = await library().check();
+    await tagging;
+    assert.deepEqual(checked.changes, []);
+    assert.deepEqual(library().catalog.get(item.id).tags, ["kept"]);
+  });
+});
+
 test("a check catches a change of size or date, reading only what it must", async () => {
   await withLibrary(async ({ root, library }) => {
     const { item, file } = await add(library(), root, "notes.txt", "first draft");

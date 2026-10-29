@@ -11,6 +11,7 @@
 </p>
 <p align="center">
   <a href="../../releases/latest"><img alt="Download for macOS, Windows and Linux" src="https://img.shields.io/badge/Download-macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-6a3fe0?style=for-the-badge" /></a>
+  <a href="https://www.youtube.com/watch?v=E5dHqzAZ03M"><img alt="Watch the video on YouTube" src="https://img.shields.io/badge/Watch_the_video-24292f?style=for-the-badge&logo=youtube&logoColor=FF0000" /></a>
 </p>
 <!-- Once the repository is public, show its stars here:
 <p align="center"><a href="../../stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/OWNER/REPO?style=social" /></a></p>

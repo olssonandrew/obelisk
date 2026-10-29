@@ -883,7 +883,10 @@ export async function openLibrary(
         if (importing()) throw new Error("Wait for imports to finish before checking. They're in Transfers.");
         if (catalog.jobs().some((j) => ["queued", "downloading", "verifying", "pausing"].includes(j.status)))
           throw new Error("Wait for transfers to finish before checking.");
+        // Background saves (a checksum just worked out, a date filled in) take moments.
+        for (let waited = 0; pending && waited < 10000; waited += 50) await new Promise((resolve) => setTimeout(resolve, 50));
         if (pending) throw new Error("Wait for the current change to finish before checking.");
+        if (checking) throw new Error("Wait for the archive check.");
         checking = true;
         changed();
         try {
